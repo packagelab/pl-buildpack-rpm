@@ -13,7 +13,27 @@ esac
 
 build_dir="$1"
 
-echo rpmdevtools
+echo '
+autoconf
+automake
+bison
+byacc
+elfutils
+flex
+gcc
+gcc-c++
+gettext
+intltool
+libtool
+make
+patch
+patchutils
+pkgconfig
+rcs
+redhat-rpm-config
+rpm-build
+rpmdevtools
+'
 
 #cd $build_dir >/dev/null 2>&1
 #spectool -g *.spec
