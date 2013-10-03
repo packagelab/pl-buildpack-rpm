@@ -23,7 +23,8 @@ rpmbuild=$build_dir/.rpmbuild
 
 echo "-----> Creating RPM build tree"
 cd $build_dir >/dev/null 2>&1
-mkdir -p $rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+mkdir -p $rpmbuild/{BUILD,BUILDROOT,RPMS,SRPMS}
+mkdir -p $cache_dir/rpmbuild/SOURCES
 cd - >/dev/null 2>&1
 
 echo "-----> Downloading sources and patches"
@@ -35,6 +36,7 @@ echo "-----> Building RPM package"
 cd $build_dir >/dev/null 2>&1
 rpmbuild -bb --nodeps \
   --define "_topdir $rpmbuild" \
+  --define "_sourcedir $cache_dir/rpmbuild/SOURCES" \
   --define "_specdir $build_dir" \
   *.spec 2>&1 | indent
 cd - >/dev/null 2>&1
