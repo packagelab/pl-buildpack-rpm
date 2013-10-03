@@ -23,13 +23,11 @@ flex
 gcc
 gcc-c++
 gettext
-intltool
 libtool
 make
 patch
 patchutils
 pkgconfig
-rcs
 redhat-rpm-config
 rpm-build
 rpmdevtools
