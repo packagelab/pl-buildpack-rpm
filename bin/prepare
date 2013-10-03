@@ -13,6 +13,7 @@ esac
 
 build_dir="$1"
 
+# XXX: Get list of dependencies from spec file
 echo '
 autoconf
 automake
@@ -31,8 +32,7 @@ pkgconfig
 redhat-rpm-config
 rpm-build
 rpmdevtools
+tar
+unzip
+wget
 '
-
-#cd $build_dir >/dev/null 2>&1
-#spectool -g *.spec
-#cd - >/dev/null 2>&1
