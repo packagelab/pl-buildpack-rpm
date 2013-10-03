@@ -17,7 +17,7 @@ cd $build_dir >/dev/null 2>&1
 
 echo "---"
 echo "artifacts:"
-for pkg in *.rpm
+for pkg in .rpmbuild/RPMS/*/*.rpm
 do
   echo "   - $pkg"
 done
