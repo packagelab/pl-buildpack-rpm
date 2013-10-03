@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# fail fast
+set -o errexit
+set -o nounset
+set -o pipefail
+
+indent() {
+  sed -u 's/^/       /'
+}
+
+scriptname=$(basename $0)
+case $# in
+  2) :;;
+  *) echo "$scriptname: usage: $scriptname BUILD_DIR CACHE_DIR" >&2; exit 2;;
+esac
+
+build_dir="$1"
+cache_dir="$2"
+ccache_max_size=50G
+num_cpu=$(grep -c ^bogomips /proc/cpuinfo)
+
+echo "-----> Creating RPM build tree"
+cd $build_dir >/dev/null 2>&1
+rpmdev-setuptree 2>&1 | indent
+cd - >/dev/null 2>&1
+
+echo "-----> Downloading sources and patches"
+cd $build_dir >/dev/null 2>&1
+spectool -g *.spec
+cd - >/dev/null 2>&1
+
+echo "-----> Building RPM package"
+cd $build_dir >/dev/null 2>&1
+rpmbuild -bb --nodeps --define "_sourcedir ." --define "_srcrpmdir ." *.spec 2>&1 | indent
+cd - >/dev/null 2>&1

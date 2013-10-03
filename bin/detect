@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# fail fast
+set -o errexit
+set -o nounset
+set -o pipefail
+
+scriptname=$(basename $0)
+case $# in
+  1) :;;
+  *) echo "$scriptname: usage: $scriptname BUILD_DIR" >&2; exit 2;;
+esac
+
+build_dir="$1"
+
+if ls $build_dir/*.spec >/dev/null 2>&1
+then
+  echo RPM
+  exit 0
+else
+  exit 1
+fi
