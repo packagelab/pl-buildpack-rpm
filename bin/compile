@@ -21,6 +21,14 @@ ccache_max_size=50G
 num_cpu=$(grep -c ^bogomips /proc/cpuinfo)
 rpmbuild=$build_dir/.rpmbuild
 
+export CCACHE_DIR=$cache_dir/ccache
+export CC='ccache gcc'
+export CXX='ccache g++'
+
+echo "-----> Zeroing ccache stats"
+ccache -M $ccache_max_size 2>&1 | indent
+ccache -z 2>&1 | indent
+
 echo "-----> Creating RPM build tree"
 cd $build_dir >/dev/null 2>&1
 mkdir -p $rpmbuild/{BUILD,BUILDROOT,RPMS,SRPMS}
