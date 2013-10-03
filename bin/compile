@@ -37,7 +37,7 @@ cd - >/dev/null 2>&1
 
 echo "-----> Downloading sources and patches"
 cd $build_dir >/dev/null 2>&1
-spectool -g -C $rpmbuild/SOURCES *.spec
+spectool -g -C $cache_dir/rpmbuild/SOURCES *.spec
 cd - >/dev/null 2>&1
 
 echo "-----> Building RPM package"
