@@ -19,24 +19,22 @@ build_dir="$1"
 cache_dir="$2"
 ccache_max_size=50G
 num_cpu=$(grep -c ^bogomips /proc/cpuinfo)
+rpmbuild=$build_dir/.rpmbuild
 
 echo "-----> Creating RPM build tree"
 cd $build_dir >/dev/null 2>&1
-mkdir -p $build_dir/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+mkdir -p $rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
 cd - >/dev/null 2>&1
 
 echo "-----> Downloading sources and patches"
 cd $build_dir >/dev/null 2>&1
-spectool -g -C $build_dir/SOURCES *.spec
+spectool -g -C $rpmbuild/SOURCES *.spec
 cd - >/dev/null 2>&1
 
 echo "-----> Building RPM package"
 cd $build_dir >/dev/null 2>&1
 rpmbuild -bb --nodeps \
-  --define "_builddir $build_dir/BUILD" \
-  --define "_rpmdir $build_dir/RPMS" \
-  --define "_sourcedir $build_dir/SOURCES" \
+  --define "_topdir $rpmbuild" \
   --define "_specdir $build_dir" \
-  --define "_srcrpmdir $build_dir/SRPMS" \
   *.spec 2>&1 | indent
 cd - >/dev/null 2>&1
