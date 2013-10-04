@@ -30,21 +30,40 @@ ccache -M $ccache_max_size 2>&1 | indent
 ccache -z 2>&1 | indent
 
 echo "-----> Creating RPM build tree"
-cd $build_dir >/dev/null 2>&1
 mkdir -p $rpmbuild/{BUILD,BUILDROOT,RPMS,SRPMS}
 mkdir -p $cache_dir/rpmbuild/SOURCES
-cd - >/dev/null 2>&1
 
 echo "-----> Downloading sources and patches"
-cd $build_dir >/dev/null 2>&1
-spectool -g -C $cache_dir/rpmbuild/SOURCES *.spec
-cd - >/dev/null 2>&1
+spectool -l $build_dir/*.spec \
+| awk '$2 ~ /^http/ {print $2}' \
+| while read -r url
+do
+  file=$(basename $url)
+  if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
+  then
+    echo "       Copying from cache: $file"
+    cp -f $cache_dir/rpmbuild/SOURCES/$file $build_dir/$file
+  else
+    echo "       Downloading: $url"
+    curl -fsSL $url >$build_dir/$file 2>&1 | indent
+    cp -f $build_dir/$file $cache_dir/rpmbuild/SOURCES/$file.new
+    mv $cache_dir/rpmbuild/SOURCES/$file.new $cache_dir/rpmbuild/SOURCES/$file
+  fi
+done
+
+if [ -f $build_dir/sources ]
+then
+  echo "-----> Verifying MD5 checksums"
+  cd $build_dir >/dev/null 2>&1
+  md5sum -c sources 2>&1 | indent
+  cd - >/dev/null 2>&1
+fi
 
 echo "-----> Building RPM package"
 cd $build_dir >/dev/null 2>&1
 rpmbuild -bb \
   --define "_topdir $rpmbuild" \
-  --define "_sourcedir $cache_dir/rpmbuild/SOURCES" \
+  --define "_sourcedir $build_dir" \
   --define "_specdir $build_dir" \
   *.spec 2>&1 | indent
 cd - >/dev/null 2>&1
