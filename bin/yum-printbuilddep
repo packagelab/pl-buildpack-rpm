@@ -120,6 +120,25 @@ class YumBuildDep(YumUtilBase):
                     print "Could not setup repo %s: %s" % (r.id, e)
                     sys.exit(1)
 
+    def resolve_deps(self, deplist):
+        pkgs = []
+        for dep in deplist:
+            self.logger.debug(' REQ:  %s' % dep)                
+            if dep.startswith("rpmlib("): 
+                continue
+            #instreq = self.returnInstalledPackagesByDep(dep)
+            #if instreq:
+            #    self.logger.info(' --> Already installed : %s'  % instreq[0])                    
+            #    continue
+            try:
+                pkg = self.returnPackageByDep(dep)
+                self.logger.info(' --> %s' % pkg)
+                pkgs.append(pkg)
+            except yum.Errors.YumBaseError, e:
+                self.logger.error("Error: %s" % e)
+                sys.exit(1)
+        return pkgs
+
     def get_build_deps(self,opts):
         srcnames = []
         specnames = []
@@ -182,10 +201,11 @@ class YumBuildDep(YumUtilBase):
                 buildreqs.append(d.DNEVR()[2:])
 
             self.logger.info('Getting requirements for %s' % name)
-            #self.install_deps(buildreqs)
 
-        for req in sorted(list(set(buildreqs))):
-            print req
+        pkgs = self.resolve_deps(buildreqs)
+        for req in sorted(list(set(pkgs))):
+            name = str(req).rsplit('-', 2)[0]
+            print name.split(':', 1)[1] if ':' in name else name
 
             
 if __name__ == '__main__':
