@@ -42,7 +42,7 @@ cd - >/dev/null 2>&1
 
 echo "-----> Building RPM package"
 cd $build_dir >/dev/null 2>&1
-rpmbuild -bb --nodeps \
+rpmbuild -bb \
   --define "_topdir $rpmbuild" \
   --define "_sourcedir $cache_dir/rpmbuild/SOURCES" \
   --define "_specdir $build_dir" \
