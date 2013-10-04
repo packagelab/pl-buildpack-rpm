@@ -13,7 +13,7 @@ esac
 
 build_dir="$1"
 
-# XXX: Get list of dependencies from spec file
+# Basic build dependencies
 echo '
 autoconf
 automake
@@ -36,3 +36,5 @@ tar
 unzip
 wget
 '
+# Extract list of build dependencies from spec file
+$(dirname $0)/yum-printbuilddep -q $build_dir/*.spec
