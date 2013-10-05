@@ -5,6 +5,10 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+indent() {
+  sed -u 's/^/       /'
+}
+
 scriptname=$(basename $0)
 case $# in
   1) :;;
@@ -36,5 +40,29 @@ tar
 unzip
 wget
 '
-# Extract list of build dependencies from spec file
-$(dirname $0)/yum-printbuilddep -q $build_dir/*.spec
+
+if [ -f /etc/centos-release ]
+then
+  case $(awk '{print $3}' < etc/centos-release) in
+    5.*) echo '%centos_version 505' > $HOME/.rpmmacros;;
+    6.*) echo '%centos_version 600' > $HOME/.rpmmacros;;
+  esac
+fi
+
+if ls $build_dir/*.spec >/dev/null 2>&1
+then
+  $(dirname $0)/yum-printbuilddep -q $build_dir/*.spec
+elif ls $build_dir/*.spec.in >/dev/null 2>&1
+then
+  spec_in=$(echo $build_dir/*.spec.in)
+  spec=$(echo $spec_in | sed 's/\.in$//')
+  parse_configure_ac=$(dirname $0)/parse-configure-ac
+  expand_specfile_in=$(dirname $0)/expand-specfile-in
+
+  package_name=$($parse_configure_ac name < $build_dir/configure.ac)
+  package_version=$($parse_configure_ac version < $build_dir/configure.ac)
+
+  $expand_specfile_in $package_name $package_version < $spec_in > $spec
+
+  $(dirname $0)/yum-printbuilddep -q $spec
+fi

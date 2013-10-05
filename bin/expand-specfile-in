@@ -1,0 +1,29 @@
+#!/usr/bin/python
+import re, sys
+
+if len(sys.argv[1:]) != 2:
+    print >> sys.stderr, 'expand-specfile-in: usage: expand-specfile-in NAME VERSION'
+    sys.exit(2)
+
+name = sys.argv[1]
+version = sys.argv[2]
+
+var_map = {
+    'PACKAGE_NAME': name,
+    'PACKAGE_VERSION': version,
+    'RPM_RELEASE': '1',
+    'VERSION': version,
+}
+
+regex = r'(?:@([A-Z0-9_]+)@)+'
+s = sys.stdin.read()
+
+r = re.findall(regex, s, flags=re.MULTILINE)
+spec_vars = sorted(list(set(r)))
+for var in spec_vars:
+    if var not in var_map:
+        print >> sys.stderr, 'expand-specfile-in: unknown variable: @%s@' % var
+    print >> sys.stderr, 'expand-specfile-in: @%s@ -> %s' % (var, var_map[var])
+    s = s.replace('@%s@' % var, var_map[var])
+
+sys.stdout.write(s)

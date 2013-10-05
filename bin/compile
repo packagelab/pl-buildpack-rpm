@@ -33,37 +33,70 @@ echo "-----> Creating RPM build tree"
 mkdir -p $rpmbuild/{BUILD,BUILDROOT,RPMS,SRPMS}
 mkdir -p $cache_dir/rpmbuild/SOURCES
 
-echo "-----> Downloading sources and patches"
-spectool -l $build_dir/*.spec \
-| awk '$2 ~ /^http|ftp/ {print $2}' \
-| while read -r url
-do
-  file=$(basename $url)
-  if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
-  then
-    echo "       Copying from cache: $file"
-    cp -f $cache_dir/rpmbuild/SOURCES/$file $build_dir/$file
-  else
-    echo "       Downloading: $url"
-    curl -fsSL $url >$build_dir/$file 2>&1 | indent
-    cp -f $build_dir/$file $cache_dir/rpmbuild/SOURCES/$file.new
-    mv $cache_dir/rpmbuild/SOURCES/$file.new $cache_dir/rpmbuild/SOURCES/$file
-  fi
-done
-
-if [ -f $build_dir/sources ]
+echo "-----> Creating .rpmmacros"
+if [ -f /etc/centos-release ]
 then
-  echo "-----> Verifying MD5 checksums"
-  cd $build_dir >/dev/null 2>&1
-  md5sum -c sources 2>&1 | indent
-  cd - >/dev/null 2>&1
+  case $(awk '{print $3}' < etc/centos-release) in
+    5.*) echo '%centos_version 505' > $HOME/.rpmmacros;;
+    6.*) echo '%centos_version 600' > $HOME/.rpmmacros;;
+  esac
 fi
 
+if ls $build_dir/*.spec.in >/dev/null 2>&1
+then
+  num_sources=$(spectool -l $build_dir/*.spec | awk '$2 ~ /^http|ftp/ {print $2}' | wc -l)
+  case $num_sources in
+    1) :;;
+    *) echo "       error: Found $num_sources source URLs, should be 1"; exit 1;;
+    esac
+  source_url=$(spectool -l $build_dir/*.spec | awk '$2 ~ /^http|ftp/ {print $2}')
+  source_file=$(basename $source_url)
+  case $source_file in
+    *.tar*) :;;
+    *) echo "       error: Don't know how to create archive $source_file"; exit 1;;
+  esac
+  echo "-----> Creating source archive"
+  cd $build_dir >/dev/null 2>&1
+  ./autogen.sh 2>&1 | indent
+  ./configure 2>&1 | indent
+  make dist-bzip2 2>&1 | indent
+  cd - >/dev/null 2>&1
+  #tar -C $build_dir --exclude '*.spec' -caf $cache_dir/$source_file .
+  #mv $cache_dir/$source_file $build_dir
+else
+  echo "-----> Downloading sources and patches"
+  spectool -l $build_dir/*.spec \
+  | awk '$2 ~ /^http|ftp/ {print $2}' \
+  | while read -r url
+  do
+    file=$(basename $url)
+    if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
+    then
+      echo "       Copying from cache: $file"
+      cp -f $cache_dir/rpmbuild/SOURCES/$file $build_dir/$file
+    else
+      echo "       Downloading: $url"
+      curl -fsSL $url >$build_dir/$file 2>&1 | indent
+      cp -f $build_dir/$file $cache_dir/rpmbuild/SOURCES/$file.new
+      mv $cache_dir/rpmbuild/SOURCES/$file.new $cache_dir/rpmbuild/SOURCES/$file
+    fi
+  done
+  if [ -f $build_dir/sources ]
+  then
+    echo "-----> Verifying MD5 checksums"
+    cd $build_dir >/dev/null 2>&1
+    md5sum -c sources 2>&1 | indent
+    cd - >/dev/null 2>&1
+  fi
+fi
+
+# XXX: Make _unpackaged_files_terminate_build configurable?
 echo "-----> Building RPM package"
 cd $build_dir >/dev/null 2>&1
 rpmbuild -bb \
   --define "_topdir $rpmbuild" \
   --define "_sourcedir $build_dir" \
   --define "_specdir $build_dir" \
+  --define "_unpackaged_files_terminate_build 0" \
   *.spec 2>&1 | indent
 cd - >/dev/null 2>&1

@@ -1,0 +1,16 @@
+#!/usr/bin/python
+import re, sys
+
+if len(sys.argv[1:]) != 1:
+    print >> sys.stderr, 'parse-configure-ac: usage: parse-configure-ac (name|version)'
+    sys.exit(2)
+
+token = sys.argv[1]
+regex = r"^\s*AC_INIT\(\[([^\]]+)\],\s*\[([^\]]+)"
+s = sys.stdin.read()
+
+m = re.search(regex, s, flags=re.MULTILINE)
+if token == 'name':
+    print m.group(1)
+elif token == 'version':
+    print m.group(2)
