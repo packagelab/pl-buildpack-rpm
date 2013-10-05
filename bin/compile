@@ -35,7 +35,7 @@ mkdir -p $cache_dir/rpmbuild/SOURCES
 
 echo "-----> Downloading sources and patches"
 spectool -l $build_dir/*.spec \
-| awk '$2 ~ /^http/ {print $2}' \
+| awk '$2 ~ /^http|ftp/ {print $2}' \
 | while read -r url
 do
   file=$(basename $url)
