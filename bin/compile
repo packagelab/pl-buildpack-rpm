@@ -61,8 +61,13 @@ then
   ./configure 2>&1 | indent
   make dist-bzip2 2>&1 | indent
   cd - >/dev/null 2>&1
-  #tar -C $build_dir --exclude '*.spec' -caf $cache_dir/$source_file .
-  #mv $cache_dir/$source_file $build_dir
+elif [ -f $build_dir/setup.py ]
+then
+  echo "-----> Creating source archive"
+  cd $build_dir >/dev/null 2>&1
+  python setup.py sdist --formats=bztar 2>&1 | indent
+  mv dist/*.tar.bz2 .
+  cd - >/dev/null 2>&1
 else
   echo "-----> Downloading sources and patches"
   spectool -l $build_dir/*.spec \
