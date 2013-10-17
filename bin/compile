@@ -53,6 +53,24 @@ EOT
   esac
 fi
 
+if ls $build_dir/*.spec >/dev/null 2>&1
+then
+  specfile=$(ls $build_dir/*.spec)
+elif ls $build_dir/SPECS/*.spec >/dev/null 2>&1
+then
+  specfile=$(ls $build_dir/SPECS/*.spec)
+else
+  echo "      error: Cannot find specfile"
+  exit 1
+fi
+
+if [ -d $build_dir/SOURCES ]
+then
+  sourcedir=$build_dir/SOURCES
+else
+  sourcedir=$build_dir
+fi
+
 if ls $build_dir/*.spec.in >/dev/null 2>&1
 then
   cd $build_dir >/dev/null 2>&1
@@ -82,7 +100,7 @@ then
 else
   echo "-----> Downloading sources and patches"
   cd $build_dir >/dev/null 2>&1
-  $spectool -l $build_dir/*.spec \
+  $spectool -l $specfile \
   | awk '$2 ~ /^http|ftp/ {print $2}' \
   | while read -r url
   do
@@ -90,15 +108,15 @@ else
     if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
     then
       echo "       Copying from cache: $file"
-      cp -f $cache_dir/rpmbuild/SOURCES/$file $build_dir/$file
+      cp -f $cache_dir/rpmbuild/SOURCES/$file $sourcedir/$file
     else
       echo "       Downloading: $url"
-      curl -fsSL $url >$build_dir/$file 2>&1 | indent
-      cp -f $build_dir/$file $cache_dir/rpmbuild/SOURCES/$file.new
+      curl -fsSL $url >$sourcedir/$file 2>&1 | indent
+      cp -f $sourcedir/$file $cache_dir/rpmbuild/SOURCES/$file.new
       mv $cache_dir/rpmbuild/SOURCES/$file.new $cache_dir/rpmbuild/SOURCES/$file
     fi
   done
-  if [ -f $build_dir/sources ]
+  if [ -f $sourcedir/sources ]
   then
     echo "-----> Verifying MD5 checksums"
     md5sum -c sources 2>&1 | indent
@@ -107,12 +125,11 @@ else
 fi
 
 # XXX: Make _unpackaged_files_terminate_build configurable?
+# --define "_unpackaged_files_terminate_build 0"
 echo "-----> Building RPM package"
 cd $build_dir >/dev/null 2>&1
 rpmbuild -bb \
   --define "_topdir $rpmbuild" \
-  --define "_sourcedir $build_dir" \
-  --define "_specdir $build_dir" \
-  --define "_unpackaged_files_terminate_build 0" \
-  *.spec 2>&1 | indent
+  --define "_sourcedir $sourcedir" \
+  $specfile 2>&1 | indent
 cd - >/dev/null 2>&1

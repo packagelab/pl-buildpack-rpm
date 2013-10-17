@@ -17,6 +17,10 @@ if ls $build_dir/*.spec >/dev/null 2>&1
 then
   echo RPM
   exit 0
+elif ls $build_dir/SPECS/*.spec >/dev/null 2>&1
+then
+  echo RPM
+  exit 0
 elif ls $build_dir/*.spec.in >/dev/null 2>&1
 then
   echo RPM
