@@ -16,6 +16,7 @@ case $# in
 esac
 
 build_dir="$1"
+vendor_rpm_url=http://cb-misc.s3.amazonaws.com/vendor-rpm-4.11.1-amd64.tar.gz
 
 # Basic build dependencies
 echo '
@@ -41,17 +42,25 @@ unzip
 wget
 '
 
-if [ -f /etc/centos-release ]
+find_buildrequires="$(dirname $0)/yum-printbuilddep -q"
+if [ -f /etc/redhat-release ]
 then
-  case $(awk '{print $3}' < etc/centos-release) in
-    5.*) echo '%centos_version 505' > $HOME/.rpmmacros;;
-    6.*) echo '%centos_version 600' > $HOME/.rpmmacros;;
+  case $(awk '{print $3}' < etc/redhat-release) in
+    5.*)
+      echo '%centos_version 505' > $HOME/.rpmmacros
+      mkdir -p "$build_dir"/.heroku
+      curl -fsSL $vendor_rpm_url | tar -C "$build_dir"/.heroku -xzf -
+      find_buildrequires="$build_dir/.heroku/vendor/bin/rpmspec -q --buildrequires"
+      ;;
+    6.*)
+      echo '%centos_version 600' > $HOME/.rpmmacros
+      ;;
   esac
 fi
 
 if ls $build_dir/*.spec >/dev/null 2>&1
 then
-  $(dirname $0)/yum-printbuilddep -q $build_dir/*.spec
+  $find_buildrequires $build_dir/*.spec
 elif ls $build_dir/*.spec.in >/dev/null 2>&1
 then
   spec_in=$(echo $build_dir/*.spec.in)
@@ -64,5 +73,5 @@ then
 
   $expand_specfile_in $package_name $package_version < $spec_in > $spec
 
-  $(dirname $0)/yum-printbuilddep -q $spec
+  $find_buildrequires $spec
 fi
