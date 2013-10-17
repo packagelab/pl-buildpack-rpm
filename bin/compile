@@ -35,11 +35,20 @@ mkdir -p $rpmbuild/{BUILD,BUILDROOT,RPMS,SRPMS}
 mkdir -p $cache_dir/rpmbuild/SOURCES
 
 echo "-----> Creating .rpmmacros"
-if [ -f /etc/centos-release ]
+if [ -f /etc/redhat-release ]
 then
-  case $(awk '{print $3}' < etc/centos-release) in
-    5.*) echo '%centos_version 505' > $HOME/.rpmmacros;;
-    6.*) echo '%centos_version 600' > $HOME/.rpmmacros;;
+  case $(awk '{print $3}' < etc/redhat-release) in
+    5.*)
+      cat <<EOT >$HOME/.rpmmacros
+%centos_version 505
+%dist .el5
+EOT
+      ;;
+    6.*)
+      cat <<EOT >$HOME/.rpmmacros
+%centos_version 600
+EOT
+      ;;
   esac
 fi
 

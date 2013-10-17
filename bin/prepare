@@ -46,13 +46,18 @@ if [ -f /etc/redhat-release ]
 then
   case $(awk '{print $3}' < etc/redhat-release) in
     5.*)
-      echo '%centos_version 505' > $HOME/.rpmmacros
+      cat <<EOT >$HOME/.rpmmacros
+%centos_version 505
+%dist .el5
+EOT
       mkdir -p "$build_dir"/.heroku
       curl -fsSL $vendor_rpm_url | tar -C "$build_dir"/.heroku -xzf -
       find_buildrequires="$build_dir/.heroku/vendor/bin/rpmspec -q --buildrequires"
       ;;
     6.*)
-      echo '%centos_version 600' > $HOME/.rpmmacros
+      cat <<EOT >$HOME/.rpmmacros
+%centos_version 600
+EOT
       ;;
   esac
 fi
