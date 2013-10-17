@@ -64,7 +64,7 @@ fi
 
 if ls $build_dir/*.spec >/dev/null 2>&1
 then
-  $find_buildrequires $build_dir/*.spec
+  $find_buildrequires $build_dir/*.spec | awk '{print $1}'
 elif ls $build_dir/*.spec.in >/dev/null 2>&1
 then
   spec_in=$(echo $build_dir/*.spec.in)
@@ -77,5 +77,5 @@ then
 
   $expand_specfile_in $package_name $package_version < $spec_in > $spec
 
-  $find_buildrequires $spec
+  $find_buildrequires $spec | awk '{print $1}'
 fi
