@@ -65,7 +65,15 @@ fi
 
 if ls $build_dir/*.spec >/dev/null 2>&1
 then
-  $find_buildrequires $build_dir/*.spec | awk '{print $1}'
+  $find_buildrequires $build_dir/*.spec \
+  | while read -r dep
+  do
+    pkg=$(yum -q resolvedep "$dep" | sed -e 's/.*://' -e 's/-[^-]*-[^-]*$//')
+    case "$pkg" in
+      'No Package Found'*) echo $pkg >&2; exit 1;;
+      *) echo $pkg;;
+    esac
+  done
 elif ls $build_dir/*.spec.in >/dev/null 2>&1
 then
   spec_in=$(echo $build_dir/*.spec.in)
