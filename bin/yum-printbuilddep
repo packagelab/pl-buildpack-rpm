@@ -205,7 +205,10 @@ class YumBuildDep(YumUtilBase):
         pkgs = self.resolve_deps(buildreqs)
         for req in sorted(list(set(pkgs))):
             name = str(req).rsplit('-', 2)[0]
-            print name.split(':', 1)[1] if ':' in name else name
+            if ':' in name:
+                print name.split(':', 1)[1]
+            else:
+                print name
 
             
 if __name__ == '__main__':
