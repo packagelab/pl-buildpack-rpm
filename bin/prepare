@@ -49,6 +49,7 @@ then
       cat <<EOT >$HOME/.rpmmacros
 %centos_version 505
 %dist .el5
+%rhel 5
 EOT
       mkdir -p "$build_dir"/.heroku
       curl -fsSL $vendor_rpm_url | tar -C "$build_dir"/.heroku -xzf -

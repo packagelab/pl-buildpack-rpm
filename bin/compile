@@ -42,6 +42,7 @@ then
       cat <<EOT >$HOME/.rpmmacros
 %centos_version 505
 %dist .el5
+%rhel 5
 EOT
       ;;
     6.*)
