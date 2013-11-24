@@ -101,11 +101,11 @@ else
   echo "-----> Downloading sources and patches"
   cd $build_dir >/dev/null 2>&1
   $spectool -l $specfile \
-  | awk '$2 ~ /^http|ftp/ {print $2}' \
+  | awk '{print $2}' \
   | while read -r url
   do
     file=$(basename $url)
-    package=$(echo $specfile | sed 's/\.spec$//')
+    package=$(basename $specfile | sed 's/\.spec$//')
     case "$url" in
       ^http*|^ftp*)
         if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
