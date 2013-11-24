@@ -78,7 +78,7 @@ then
   case $num_sources in
     1) :;;
     *) echo "       error: Found $num_sources source URLs, should be 1"; exit 1;;
-    esac
+  esac
   source_url=$($spectool -l $build_dir/*.spec | awk '$2 ~ /^http|ftp/ {print $2}')
   source_file=$(basename $source_url)
   case $source_file in
@@ -105,16 +105,26 @@ else
   | while read -r url
   do
     file=$(basename $url)
-    if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
-    then
-      echo "       Copying from cache: $file"
-      cp -f $cache_dir/rpmbuild/SOURCES/$file $sourcedir/$file
-    else
-      echo "       Downloading: $url"
-      curl -fsSL $url >$sourcedir/$file 2>&1 | indent
-      cp -f $sourcedir/$file $cache_dir/rpmbuild/SOURCES/$file.new
-      mv $cache_dir/rpmbuild/SOURCES/$file.new $cache_dir/rpmbuild/SOURCES/$file
-    fi
+    package=$(echo $specfile | sed 's/\.spec$//')
+    case "$url" in
+      ^http*|^ftp*)
+        if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
+        then
+          echo "       Copying from cache: $file"
+          cp -f $cache_dir/rpmbuild/SOURCES/$file $sourcedir/$file
+        else
+          echo "       Downloading: $url"
+          curl -fsSL $url >$sourcedir/$file 2>&1 | indent
+          cp -f $sourcedir/$file $cache_dir/rpmbuild/SOURCES/$file.new
+          mv $cache_dir/rpmbuild/SOURCES/$file.new $cache_dir/rpmbuild/SOURCES/$file
+        fi
+        ;;
+      "$package"*.tar.gz)
+        echo "-----> Creating source archive: $file"
+        tar -C $build_dir -czf /tmp/$file .
+        mv /tmp/$file $sourcedir/$file
+        ;;
+    esac
   done
   if [ -f $sourcedir/sources ]
   then
