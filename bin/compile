@@ -134,6 +134,36 @@ else
   cd - >/dev/null 2>&1
 fi
 
+cd $build_dir >/dev/null 2>&1
+spec_version=$(cat $specfile | awk -F: '$1 == "Version" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
+tag=$(git tag | egrep '^(\w*[^0-9])?'"$spec_version"'$' || : | head -n 1)
+case "$tag" in
+  '') tagged_commit=;;
+  *) tagged_commit=$(git rev-list -n 1 "$tag");;
+esac
+commit=$(git log -n 1 | awk '$1 == "commit" {print $2}')
+case "$tagged_commit" in
+  "$commit")
+    echo "       Found version: $spec_version (release)"
+    echo "       Not modifying debian/changelog"
+    ;;
+  '')
+    echo "       Found version: $spec_version (pre-release)"
+    timestamp=$(date +%Y%m%d%H%M%S)
+    rel=0.$timestamp.dev.g$(echo $commit | sed 's/^\(.\{7\}\).*/\1/')
+    echo "       Updating spec file with Release: $rel"
+    sed -i "s/^\(Release:[^0-9]*\).*$/\1$rel%{?dist}/" $specfile
+    ;;
+  *)
+    echo "       Found version: $spec_version (post-release)"
+    timestamp=$(date +%Y%m%d%H%M%S)
+    rel=1.$timestamp.dev.g$(echo $commit | sed 's/^\(.\{7\}\).*/\1/')
+    echo "       Updating spec file with Release: $rel"
+    sed -i "s/^\(Release:[^0-9]*\).*$/\1$rel%{?dist}/" $specfile
+    ;;
+esac
+cd - >/dev/null 2>&1
+
 # XXX: Make _unpackaged_files_terminate_build configurable?
 # --define "_unpackaged_files_terminate_build 0"
 echo "-----> Building RPM package"
