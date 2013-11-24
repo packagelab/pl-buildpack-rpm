@@ -127,7 +127,7 @@ else
         ;;
       $spec_package.tar.bz2|$spec_package-$spec_version.tar.bz2)
         echo "-----> Creating source archive: $file"
-        tar -C $build_dir -cjf /tmp/$file .
+        tar -C $build_dir --transform "s,^,$spec_package-$spec_version/," -cjf /tmp/$file .
         mv /tmp/$file $sourcedir/$file
         ;;
     esac
