@@ -105,7 +105,8 @@ else
   | while read -r url
   do
     file=$(basename $url)
-    package=$(basename $specfile | sed 's/\.spec$//')
+    spec_package=$(cat $specfile | awk -F: '$1 == "Name" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
+    spec_version=$(cat $specfile | awk -F: '$1 == "Version" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
     case "$url" in
       ^http*|^ftp*)
         if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
@@ -119,9 +120,14 @@ else
           mv $cache_dir/rpmbuild/SOURCES/$file.new $cache_dir/rpmbuild/SOURCES/$file
         fi
         ;;
-      "$package"*.tar.gz)
+      $spec_package.tar.gz|$spec_package-$spec_version.tar.gz)
         echo "-----> Creating source archive: $file"
         tar -C $build_dir -czf /tmp/$file .
+        mv /tmp/$file $sourcedir/$file
+        ;;
+      $spec_package.tar.bz2|$spec_package-$spec_version.tar.bz2)
+        echo "-----> Creating source archive: $file"
+        tar -C $build_dir -cjf /tmp/$file .
         mv /tmp/$file $sourcedir/$file
         ;;
     esac
