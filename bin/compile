@@ -98,19 +98,35 @@ then
   if [ -f $build_dir/hacking/module_formatter.py ]
   then
     spec_version=$(cat $specfile | awk -F: '$1 == "Version" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
+
+    distribute_dir=distribute-0.6.49
+    distribute_tarball=$distribute_dir.tar.gz
+    distribute_url=https://pypi.python.org/packages/source/d/distribute/$distribute_tarball
+    if [ ! -f $cache_dir/$distribute_tarball ]
+    then
+      curl -fsSL $distribute_url >$cache_dir/$distribute_tarball.new | indent
+      mv $cache_dir/$distribute_tarball.new $cache_dir/$distribute_tarball
+    fi
+    tar -C /tmp -xzf $cache_dir/$distribute_tarball
+    cd /tmp/$distribute_dir >/dev/null 2>&1
+    python setup.py install --user 2>&1 | indent
+    cd - >/dev/null 2>&1
+
     pip_dir=pip-1.4.1
     pip_tarball=$pip_dir.tar.gz
     pip_url=https://pypi.python.org/packages/source/p/pip/$pip_tarball
     if [ ! -f $cache_dir/$pip_tarball ]
     then
-      curl -fsSL $pip_url >$cache_dir/$pip_tarball | indent      
+      curl -fsSL $pip_url >$cache_dir/$pip_tarball.new | indent
+      mv $cache_dir/$pip_tarball.new $cache_dir/$pip_tarball
     fi
     tar -C /tmp -xzf $cache_dir/$pip_tarball
     cd /tmp/$pip_dir >/dev/null 2>&1
-    python setup.py install --user
+    python setup.py install --user 2>&1 | indent
     cd - >/dev/null 2>&1
-    $HOME/.local/bin/pip install --user jinja2 PyYAML
-    env PYTHONPATH=./lib python hacking/module_formatter.py -A $spec_version -t man -o docs/man/man3/ --module-dir=library --template-dir=hacking/templates
+
+    $HOME/.local/bin/pip install --user jinja2 PyYAML 2>&1 | indent
+    env PYTHONPATH=./lib python hacking/module_formatter.py -A $spec_version -t man -o docs/man/man3/ --module-dir=library --template-dir=hacking/templates 2>&1 | indent
   fi
   python setup.py sdist --formats=bztar,gztar 2>&1 | indent
   mv dist/*.tar.bz2 .
