@@ -94,8 +94,9 @@ elif [ -f $build_dir/setup.py ]
 then
   echo "-----> Creating source archive"
   cd $build_dir >/dev/null 2>&1
-  python setup.py sdist --formats=bztar 2>&1 | indent
+  python setup.py sdist --formats=bztar,gztar 2>&1 | indent
   mv dist/*.tar.bz2 .
+  mv dist/*.tar.gz .
   cd - >/dev/null 2>&1
 else
   echo "-----> Downloading sources and patches"
