@@ -25,6 +25,11 @@ elif ls $build_dir/*.spec.in >/dev/null 2>&1
 then
   echo RPM
   exit 0
+elif ls $build_dir/packaging/rpm/*.spec >/dev/null 2>&1
+then
+  cp -f $build_dir/packaging/rpm/*.spec $build_dir
+  echo RPM
+  exit 0
 else
   exit 1
 fi
