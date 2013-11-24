@@ -98,6 +98,18 @@ then
   if [ -f $build_dir/hacking/module_formatter.py ]
   then
     spec_version=$(cat $specfile | awk -F: '$1 == "Version" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
+    pip_dir=pip-1.4.1
+    pip_tarball=$pip_dir.tar.gz
+    pip_url=https://pypi.python.org/packages/source/p/pip/$pip_tarball
+    if [ ! -f $cache_dir/$pip_tarball ]
+    then
+      curl -fsSL $pip_url >$cache_dir/$pip_tarball | indent      
+    fi
+    tar -C /tmp -xzf $cache_dir/$pip_tarball
+    cd /tmp/$pip_dir >/dev/null 2>&1
+    python setup.py install --user
+    cd - >/dev/null 2>&1
+    $HOME/.local/bin/pip install --user jinja2 PyYAML
     env PYTHONPATH=./lib python hacking/module_formatter.py -A $spec_version -t man -o docs/man/man3/ --module-dir=library --template-dir=hacking/templates
   fi
   python setup.py sdist --formats=bztar,gztar 2>&1 | indent
