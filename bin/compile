@@ -97,15 +97,17 @@ then
   if [ -f /usr/bin/python26 ]
   then
     python=python26
+    ez_setup_flags=--insecure
   else
     python=python
+    ez_setup_flags=
   fi
   # XXX: For ansible
   if [ -f $build_dir/hacking/module_formatter.py ]
   then
     spec_version=$(cat $specfile | awk -F: '$1 == "Version" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
     echo "       Installing setuptools"
-    $python $(dirname $0)/ez_setup.py --user 2>&1 | indent
+    $python $(dirname $0)/ez_setup.py --user $ez_setup_flags 2>&1 | indent
     echo "       Installing pip"
     $python $(dirname $0)/get-pip.py --user 2>&1 | indent
     $HOME/.local/bin/pip install --user jinja2 PyYAML 2>&1 | indent
