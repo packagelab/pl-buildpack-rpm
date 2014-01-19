@@ -82,7 +82,7 @@ then
   $expand_specfile_in $package_name $package_version < $specfile_in > $specfile
 fi
 
-$rpmspec -q --buildrequires $specfile \
+$rpmspec -q --rcfile /etc/rpmrc --buildrequires $specfile \
 | while read -r dep
 do
   pkg=$(yum -q resolvedep "$dep" | sed -e 's/.*://' -e 's/-[^-]*-[^-]*$//')
