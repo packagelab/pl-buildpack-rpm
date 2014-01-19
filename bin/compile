@@ -75,21 +75,22 @@ fi
 if ls $build_dir/*.spec.in >/dev/null 2>&1
 then
   cd $build_dir >/dev/null 2>&1
-  num_sources=$($rpmspec -qP $build_dir/*.spec | egrep '^(Source|Patch).*:' | awk '$2 ~ /^http|ftp/ {print $2}' | wc -l)
+  num_sources=$($rpmspec -qP $build_dir/*.spec | egrep '^Source0:' | awk '{print $2}' | wc -l)
   case $num_sources in
     1) :;;
     *) echo "       error: Found $num_sources source URLs, should be 1"; exit 1;;
   esac
-  source_url=$($rpmspec -qP $build_dir/*.spec | egrep '^(Source|Patch).*:' | awk '$2 ~ /^http|ftp/ {print $2}')
+  source_url=$($rpmspec -qP $build_dir/*.spec | egrep '^Source0:' | awk '{print $2}')
   source_file=$(basename $source_url)
   case $source_file in
-    *.tar*) :;;
+    *.tar.bz2|*.tar.gz) :;;
     *) echo "       error: Don't know how to create archive $source_file"; exit 1;;
   esac
   echo "-----> Creating source archive"
   ./autogen.sh 2>&1 | indent
   ./configure 2>&1 | indent
   make dist-bzip2 2>&1 | indent
+  make dist 2>&1 | indent
   cd - >/dev/null 2>&1
 elif [ -f $build_dir/setup.py ]
 then
