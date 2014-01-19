@@ -20,7 +20,7 @@ cache_dir="$2"
 ccache_max_size=50G
 num_cpu=$(grep -c ^bogomips /proc/cpuinfo)
 rpmbuild=$build_dir/.rpmbuild
-spectool=$(dirname $0)/../vendor/rpmdevtools-8.4/bin/spectool
+rpmspec=$build_dir/.heroku/vendor/bin/rpmspec
 
 export CCACHE_DIR=$cache_dir/ccache
 export CC='ccache gcc'
@@ -74,12 +74,12 @@ fi
 if ls $build_dir/*.spec.in >/dev/null 2>&1
 then
   cd $build_dir >/dev/null 2>&1
-  num_sources=$($spectool -l $build_dir/*.spec | awk '$2 ~ /^http|ftp/ {print $2}' | wc -l)
+  num_sources=$($rpmspec -qP $build_dir/*.spec | egrep '^(Source|Patch).*:' | awk '$2 ~ /^http|ftp/ {print $2}' | wc -l)
   case $num_sources in
     1) :;;
     *) echo "       error: Found $num_sources source URLs, should be 1"; exit 1;;
   esac
-  source_url=$($spectool -l $build_dir/*.spec | awk '$2 ~ /^http|ftp/ {print $2}')
+  source_url=$($rpmspec -qP $build_dir/*.spec | egrep '^(Source|Patch).*:' | awk '$2 ~ /^http|ftp/ {print $2}')
   source_file=$(basename $source_url)
   case $source_file in
     *.tar*) :;;
@@ -135,7 +135,8 @@ then
 else
   echo "-----> Downloading sources and patches"
   cd $build_dir >/dev/null 2>&1
-  $spectool -l $specfile \
+  $rpmspec -qP $build_dir/*.spec \
+  | egrep '^(Source|Patch).*:' \
   | awk '{print $2}' \
   | while read -r url
   do
