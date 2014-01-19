@@ -107,6 +107,11 @@ then
   cd - >/dev/null 2>&1
 else
   echo "-----> Downloading sources and patches"
+  num_sources=$($rpmspec -qP $build_dir/*.spec | egrep '^(Source|Patch).*:' | awk '$2 ~ /^http|ftp/ {print $2}' | wc -l)
+  case $num_sources in
+    0) :;;
+    *) source_type=external;;
+  esac
   cd $build_dir >/dev/null 2>&1
   $rpmspec -qP $build_dir/*.spec \
   | egrep '^(Source|Patch).*:' \
@@ -114,11 +119,10 @@ else
   | while read -r url
   do
     file=$(basename $url)
-    spec_package=$(cat $specfile | awk -F: '$1 == "Name" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
-    spec_version=$(cat $specfile | awk -F: '$1 == "Version" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
+    spec_package=$($rpmspec -q --queryformat='%{name}\n' $specfile)
+    spec_version=$($rpmspec -q --queryformat='%{version}\n' $specfile)
     case "$url" in
       http://*|ftp://*)
-        source_type=external
         if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
         then
           echo "       Copying from cache: $file"
@@ -163,7 +167,6 @@ else
   cd - >/dev/null 2>&1
 fi
 
-echo "       source_type: $source_type"
 case "$source_type" in
   internal)
     echo "-----> Inline sources detected, updating version using git metadata"
