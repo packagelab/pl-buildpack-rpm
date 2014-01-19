@@ -18,6 +18,7 @@ esac
 build_dir="$1"
 vendor_rpm_url=http://s3.amazonaws.com/cb-misc/vendor-rpm-4.11.1-2-amd64.tar.gz
 rpmspec=$build_dir/.heroku/vendor/bin/rpmspec
+rcfile=/usr/lib/rpm/rpmrc:/usr/lib/rpm/redhat/rpmrc:~/.rpmrc
 
 # Basic build dependencies
 echo '
@@ -82,7 +83,7 @@ then
   $expand_specfile_in $package_name $package_version < $specfile_in > $specfile
 fi
 
-$rpmspec -q --rcfile /usr/lib/rpm/rpmrc --buildrequires $specfile \
+$rpmspec -q --rcfile $rcfile --buildrequires $specfile \
 | while read -r dep
 do
   pkg=$(yum -q resolvedep "$dep" | sed -e 's/.*://' -e 's/-[^-]*-[^-]*$//')
