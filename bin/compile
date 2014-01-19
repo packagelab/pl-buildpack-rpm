@@ -191,6 +191,7 @@ else
   cd - >/dev/null 2>&1
 fi
 
+echo "is_external: $is_external"
 case "$is_external" in
   1)
     echo "-----> External sources detected, leaving spec file version unchanged"
