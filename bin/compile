@@ -175,6 +175,9 @@ else
         tar -C $build_dir --transform "s,^,$spec_package-$spec_version/," -czf /tmp/$file .
         mv /tmp/$file $sourcedir/$file
         ;;
+      *)
+        echo "       Unrecognized source file: $file"
+        ;;
     esac
   done
   if [ -f $sourcedir/sources ]
