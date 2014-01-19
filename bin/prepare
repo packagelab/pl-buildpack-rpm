@@ -43,7 +43,6 @@ wget
 '
 
 mkdir -p "$build_dir"/.heroku
-echo "-----> Downloading: $vendor_rpm_url"
 curl -fsSL $vendor_rpm_url | tar -C "$build_dir"/.heroku -xzf -
 
 if [ -f /etc/redhat-release ]
