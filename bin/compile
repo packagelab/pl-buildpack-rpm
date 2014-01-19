@@ -21,7 +21,6 @@ ccache_max_size=50G
 num_cpu=$(grep -c ^bogomips /proc/cpuinfo)
 rpmbuild=$build_dir/.rpmbuild
 rpmspec=$build_dir/.heroku/vendor/bin/rpmspec
-is_external=
 
 export CCACHE_DIR=$cache_dir/ccache
 export CC='ccache gcc'
@@ -146,7 +145,6 @@ else
     spec_version=$(cat $specfile | awk -F: '$1 == "Version" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
     case "$url" in
       http://*|ftp://*)
-        is_external=1
         if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
         then
           echo "       Copying from cache: $file"
@@ -191,12 +189,8 @@ else
   cd - >/dev/null 2>&1
 fi
 
-echo "is_external: $is_external"
-case "$is_external" in
-  1)
-    echo "-----> External sources detected, leaving spec file version unchanged"
-    ;;
-  *)
+case $("$rpmspec -qP $build_dir/*.spec | egrep '^(Source|Patch).*:' | awk '$2 ~ /^http|ftp/ {print $2}' | wc -l") in
+  0)
     echo "-----> Inline sources detected, updating version using git metadata"
     cd $build_dir >/dev/null 2>&1
     spec_version=$($rpmspec -q --queryformat='%{version}\n' $specfile)
@@ -233,6 +227,9 @@ case "$is_external" in
         ;;
     esac
     cd - >/dev/null 2>&1
+    ;;
+  *)
+    echo "-----> External sources detected, leaving spec file version unchanged"
     ;;
 esac
 
