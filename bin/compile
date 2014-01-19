@@ -40,14 +40,14 @@ if [ -f /etc/redhat-release ]
 then
   case $(awk '{print $3}' < etc/redhat-release) in
     5.*)
-      cat <<EOT >$HOME/.rpmmacros
+      cat <<EOT >>$HOME/.rpmmacros
 %centos_version 505
 %dist .el5
 %rhel 5
 EOT
       ;;
     6.*)
-      cat <<EOT >$HOME/.rpmmacros
+      cat <<EOT >>$HOME/.rpmmacros
 %centos_version 600
 EOT
       ;;
