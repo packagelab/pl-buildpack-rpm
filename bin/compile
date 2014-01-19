@@ -146,13 +146,19 @@ else
         ;;
       $spec_package-$spec_version.tar.bz2)
         echo "-----> Creating source archive: $file"
-        tar -C $build_dir --transform "s,^,$spec_package-$spec_version/," -cjf /tmp/$file .
+        mkdir -p /tmp/app/$spec_package-$spec_version
+        tar -C $build_dir -cf - . | tar -C /tmp/app/$spec_package-$spec_version -xf -
+        tar -C /tmp/app -cjf /tmp/$file .
         mv /tmp/$file $sourcedir/$file
+        rm -rf /tmp/app
         ;;
       $spec_package-$spec_version.tar.gz)
         echo "-----> Creating source archive: $file"
-        tar -C $build_dir --transform "s,^,$spec_package-$spec_version/," -czf /tmp/$file .
+        mkdir -p /tmp/app/$spec_package-$spec_version
+        tar -C $build_dir -cf - . | tar -C /tmp/app/$spec_package-$spec_version -xf -
+        tar -C /tmp/app -czf /tmp/$file .
         mv /tmp/$file $sourcedir/$file
+        rm -rf /tmp/app
         ;;
       *)
         echo "       Unrecognized source file: $url"
