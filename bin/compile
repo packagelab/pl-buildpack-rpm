@@ -119,8 +119,8 @@ else
   | while read -r url
   do
     file=$(basename $url)
-    spec_package=$($rpmspec -q --queryformat='%{name}\n' $specfile)
-    spec_version=$($rpmspec -q --queryformat='%{version}\n' $specfile)
+    spec_package=$(cat $specfile | awk -F: '$1 == "Name" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
+    spec_version=$(cat $specfile | awk -F: '$1 == "Version" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
     case "$url" in
       http://*|ftp://*)
         if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
