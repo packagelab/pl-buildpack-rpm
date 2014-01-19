@@ -94,18 +94,24 @@ elif [ -f $build_dir/setup.py ]
 then
   echo "-----> Creating source archive"
   cd $build_dir >/dev/null 2>&1
+  if [ -f /usr/bin/python26 ]
+  then
+    python=python26
+  else
+    python=python
+  fi
   # XXX: For ansible
   if [ -f $build_dir/hacking/module_formatter.py ]
   then
     spec_version=$(cat $specfile | awk -F: '$1 == "Version" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
     echo "       Installing setuptools"
-    python $(dirname $0)/ez_setup.py --user 2>&1 | indent
+    $python $(dirname $0)/ez_setup.py --user 2>&1 | indent
     echo "       Installing pip"
-    python $(dirname $0)/get-pip.py --user 2>&1 | indent
+    $python $(dirname $0)/get-pip.py --user 2>&1 | indent
     $HOME/.local/bin/pip install --user jinja2 PyYAML 2>&1 | indent
-    env PYTHONPATH=./lib python hacking/module_formatter.py -A $spec_version -t man -o docs/man/man3/ --module-dir=library --template-dir=hacking/templates 2>&1 | indent
+    env PYTHONPATH=./lib $python hacking/module_formatter.py -A $spec_version -t man -o docs/man/man3/ --module-dir=library --template-dir=hacking/templates 2>&1 | indent
   fi
-  python setup.py sdist --formats=bztar,gztar 2>&1 | indent
+  $python setup.py sdist --formats=bztar,gztar 2>&1 | indent
   mv dist/*.tar.bz2 .
   mv dist/*.tar.gz .
   cd - >/dev/null 2>&1
