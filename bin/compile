@@ -177,7 +177,7 @@ else
         mv /tmp/$file $sourcedir/$file
         ;;
       *)
-        echo "       Unrecognized source file: $file"
+        echo "       Unrecognized source file: $url"
         ;;
     esac
   done
