@@ -42,7 +42,10 @@ unzip
 wget
 '
 
-find_buildrequires="$(dirname $0)/yum-printbuilddep -q"
+mkdir -p "$build_dir"/.heroku
+echo "-----> Downloading: $vendor_rpm_url"
+curl -fsSL $vendor_rpm_url | tar -C "$build_dir"/.heroku -xzf -
+
 if [ -f /etc/redhat-release ]
 then
   case $(awk '{print $3}' < etc/redhat-release) in
@@ -52,9 +55,6 @@ then
 %dist .el5
 %rhel 5
 EOT
-      mkdir -p "$build_dir"/.heroku
-      curl -fsSL $vendor_rpm_url | tar -C "$build_dir"/.heroku -xzf -
-      find_buildrequires="$rpmspec -q --buildrequires"
       ;;
     6.*)
       cat <<EOT >$HOME/.rpmmacros
@@ -83,7 +83,7 @@ then
   $expand_specfile_in $package_name $package_version < $specfile_in > $specfile
 fi
 
-$find_buildrequires $specfile \
+$rpmspec -q --buildrequires $specfile \
 | while read -r dep
 do
   pkg=$(yum -q resolvedep "$dep" | sed -e 's/.*://' -e 's/-[^-]*-[^-]*$//')
