@@ -189,7 +189,7 @@ else
   cd - >/dev/null 2>&1
 fi
 
-case $("$rpmspec -qP $build_dir/*.spec | egrep '^(Source|Patch).*:' | awk '$2 ~ /^http|ftp/ {print $2}' | wc -l") in
+case "$($rpmspec -qP $build_dir/*.spec | egrep '^(Source|Patch).*:' | awk '$2 ~ /^http|ftp/ {print $2}' | wc -l)" in
   0)
     echo "-----> Inline sources detected, updating version using git metadata"
     cd $build_dir >/dev/null 2>&1
