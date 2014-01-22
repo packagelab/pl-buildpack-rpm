@@ -35,6 +35,11 @@ then
   cp -f $build_dir/fedora/*.spec $build_dir
   echo RPM
   exit 0
+elif ls $build_dir/spec/*.spec >/dev/null 2>&1
+then
+  cp -f $build_dir/spec/*.spec $build_dir
+  echo RPM
+  exit 0
 else
   exit 1
 fi
