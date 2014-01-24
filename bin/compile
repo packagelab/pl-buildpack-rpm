@@ -137,6 +137,10 @@ else
   for url in $fixed_source_list
   do
     file=$(basename $url)
+    if [ -f $sourcedir/$file ]
+    then
+      continue
+    fi
     case "$url" in
       *://*)
         if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
