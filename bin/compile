@@ -73,6 +73,9 @@ else
   sourcedir=$build_dir
 fi
 
+spec_package=$(awk -F: '$1 == "Name" {print $2}' $specfile | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
+spec_version=$(awk -F: '$1 == "Version" {print $2}' $specfile | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
+
 if ls $build_dir/*.spec.in >/dev/null 2>&1
 then
   cd $build_dir >/dev/null 2>&1
@@ -109,32 +112,33 @@ then
   cd - >/dev/null 2>&1
 else
   echo "-----> Downloading sources and patches"
-  num_sources=$($rpmspec -qP $build_dir/*.spec | egrep '^(Source|Patch).*:' | awk '$2 ~ /^http|ftp/ {print $2}' | wc -l)
-  case $num_sources in
-    0) :;;
-    *) source_type=external;;
-  esac
-  cd $build_dir >/dev/null 2>&1
-  $rpmspec -qP $build_dir/*.spec \
-  | egrep '^(Source|Patch).*:' \
-  | awk '{print $2}' \
-  | while read -r url
+  source_list=$($rpmspec -qP $build_dir/*.spec | awk '$1 ~ /^(Source|Patch).*:/ {print $2}')
+  fixed_source_list=
+  for url in $source_list
   do
-    file=$(basename $url)
-    spec_package=$(cat $specfile | awk -F: '$1 == "Name" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
-    spec_version=$(cat $specfile | awk -F: '$1 == "Version" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
     case "$url" in
-      *://*) :;;
+      *://*)
+        fixed_source_list="$fixed_source_list $url"
+        source_type=external
+        ;;
       *)
         if [ -f $sourcedir/sources -a ! -f $sourcedir/$url ]
         then
           md5=$(awk '$2 == "'"$url"'" {print $1}' $sourcedir/sources)
-          url=$fedora_pkg_url/$spec_package/$url/$md5/$url
+          fixed_source_list="$fixed_source_list $fedora_pkg_url/$spec_package/$url/$md5/$url"
+          source_type=external
+        else
+          fixed_source_list="$fixed_source_list $url"
         fi
         ;;
-    esac
+    esac    
+  done
+  cd $build_dir >/dev/null 2>&1
+  for url in $fixed_source_list
+  do
+    file=$(basename $url)
     case "$url" in
-      http://*|https://*|ftp://*)
+      *://*)
         if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
         then
           echo "       Copying from cache: $file"
