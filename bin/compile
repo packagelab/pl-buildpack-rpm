@@ -22,6 +22,7 @@ num_cpu=$(grep -c ^bogomips /proc/cpuinfo)
 rpmbuild=$build_dir/.rpmbuild
 rpmspec=$build_dir/.heroku/vendor/bin/rpmspec
 source_type=internal
+fedora_pkg_url=http://pkgs.fedoraproject.org/repo/pkgs
 
 export CCACHE_DIR=$cache_dir/ccache
 export CC='ccache gcc'
@@ -122,6 +123,16 @@ else
     file=$(basename $url)
     spec_package=$(cat $specfile | awk -F: '$1 == "Name" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
     spec_version=$(cat $specfile | awk -F: '$1 == "Version" {print $2}' | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
+    case "$url" in
+      *://*) :;;
+      *)
+        if [ -f $sourcedir/sources -a ! -f $sourcedir/$url ]
+        then
+          md5=$(awk '$2 == "'"$url"'" {print $1}' $sourcedir/sources)
+          url=$fedora_pkg_url/$spec_package/$url/$md5/$url
+        fi
+        ;;
+    esac
     case "$url" in
       http://*|https://*|ftp://*)
         if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
