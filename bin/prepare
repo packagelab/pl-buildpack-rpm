@@ -21,27 +21,28 @@ rpmspec=$build_dir/.heroku/vendor/bin/rpmspec
 rcfile=/usr/lib/rpm/rpmrc:/usr/lib/rpm/redhat/rpmrc
 
 # Basic build dependencies
-echo '
-autoconf
-automake
-bison
-byacc
-elfutils
-flex
-gcc
-gcc-c++
-gettext
-libtool
-make
-patch
-patchutils
-pkgconfig
-redhat-rpm-config
-rpm-build
-tar
-unzip
-wget
-'
+cat <<EOT
+packages:
+  - autoconf
+  - automake
+  - bison
+  - byacc
+  - elfutils
+  - flex
+  - gcc
+  - gcc-c++
+  - gettext
+  - libtool
+  - make
+  - patch
+  - patchutils
+  - pkgconfig
+  - redhat-rpm-config
+  - rpm-build
+  - tar
+  - unzip
+  - wget
+EOT
 
 mkdir -p "$build_dir"/.heroku
 curl -fsSL $vendor_rpm_url | tar -C "$build_dir"/.heroku -xzf -
@@ -90,6 +91,6 @@ do
   pkg=$(yum -q resolvedep "$dep" | sed -e 's/.*://' -e 's/-[^-]*-[^-]*$//')
   case "$pkg" in
     'No Package Found'*) echo $pkg >&2; exit 1;;
-    *) echo $pkg;;
+    *) echo "  - $pkg";;
   esac
 done
