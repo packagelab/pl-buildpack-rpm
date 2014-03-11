@@ -246,6 +246,6 @@ esac
 # --define "_unpackaged_files_terminate_build 0"
 echo "-----> Building RPM package"
 cd $build_dir >/dev/null 2>&1
-rpmbuild -bb --define '_topdir $rpmbuild' --define '_sourcedir $sourcedir' \
+rpmbuild -bb --define "_topdir $rpmbuild" --define "_sourcedir $sourcedir" \
   $specfile 2>&1 | indent
 cd - >/dev/null 2>&1
