@@ -51,6 +51,7 @@ if [ -f /etc/redhat-release ]
 then
   case $(awk '{print $3}' < /etc/redhat-release) in
     5.*)
+      cp $(dirname $0)/../vendor/redhat-rpm-config-8.0.45/usr/lib/rpm/redhat/macros ~/.rpmmacros
       cat <<EOT >$HOME/.rpmmacros
 %centos_version 505
 %dist .el5
@@ -58,6 +59,7 @@ then
 EOT
       ;;
     6.*)
+      cp $(dirname $0)/../vendor/redhat-rpm-config-9.0.3/usr/lib/rpm/redhat/macros ~/.rpmmacros
       cat <<EOT >$HOME/.rpmmacros
 %centos_version 600
 EOT
@@ -84,7 +86,6 @@ then
   $expand_specfile_in $package_name $package_version < $specfile_in > $specfile
 fi
 
-cp /usr/lib/rpm/redhat/macros ~/.rpmmacros
 $rpmspec -q --rcfile $rcfile --buildrequires $specfile \
 | while read -r dep
 do
