@@ -50,7 +50,7 @@ cat <<EOT >>$HOME/.rpmmacros
 EOT
 if [ -f /etc/redhat-release ]
 then
-  case $(awk '{print $3}' < etc/redhat-release) in
+  case $(awk '{print $3}' < /etc/redhat-release) in
     5.*)
       cat <<EOT >>$HOME/.rpmmacros
 %centos_version 505
