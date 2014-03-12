@@ -203,7 +203,7 @@ case "$source_type" in
     echo "-----> Inline sources detected, updating version using git metadata"
     cd $build_dir >/dev/null 2>&1
     spec_version=$($rpmspec -q --queryformat='%{version}\n' $specfile | sort -u)
-    tag=$(git tag | egrep '^(\w*[^0-9])?'"$spec_version"'-[0-9]*$' || : | head -n 1)
+    tag=$(git tag | egrep '^(\w*[^0-9])?'"$spec_version"'(-[0-9]*)?$' || : | head -n 1)
     case "$tag" in
       '') tagged_commit=;;
       *) tagged_commit=$(git rev-list -n 1 "$tag");;
