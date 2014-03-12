@@ -43,28 +43,26 @@ else
   sourcedir=$build_dir
 fi
 
-echo "-----> Creating .rpmmacros"
+echo "-----> Creating .rpmmacros (for rpmspec)"
 if [ -f /etc/redhat-release ]
 then
   case $(awk '{print $3}' < /etc/redhat-release) in
     5.*)
-      cat <<EOT >$HOME/.rpmmacros
+      cp $(dirname $0)/../vendor/redhat-rpm-config-8.0.45/usr/lib/rpm/redhat/macros ~/.rpmmacros
+      cat <<EOT >>$HOME/.rpmmacros
 %centos_version 505
 %dist .el5
 %rhel 5
 EOT
       ;;
     6.*)
-      cat <<EOT >$HOME/.rpmmacros
+      cp $(dirname $0)/../vendor/redhat-rpm-config-9.0.3/usr/lib/rpm/redhat/macros ~/.rpmmacros
+      cat <<EOT >>$HOME/.rpmmacros
 %centos_version 600
 EOT
       ;;
   esac
 fi
-cat <<EOT >>$HOME/.rpmmacros
-%_topdir $rpmbuild
-%_sourcedir $sourcedir
-EOT
 
 if ls $build_dir/*.spec >/dev/null 2>&1
 then
@@ -241,6 +239,29 @@ case "$source_type" in
     echo "-----> External sources detected, leaving spec file version unchanged"
     ;;
 esac
+
+echo "-----> Creating .rpmmacros (for rpmbuild)"
+if [ -f /etc/redhat-release ]
+then
+  case $(awk '{print $3}' < /etc/redhat-release) in
+    5.*)
+      cat <<EOT >$HOME/.rpmmacros
+%centos_version 505
+%dist .el5
+%rhel 5
+EOT
+      ;;
+    6.*)
+      cat <<EOT >$HOME/.rpmmacros
+%centos_version 600
+EOT
+      ;;
+  esac
+fi
+cat <<EOT >>$HOME/.rpmmacros
+%_topdir $rpmbuild
+%_sourcedir $sourcedir
+EOT
 
 # XXX: Make _unpackaged_files_terminate_build configurable?
 # --define "_unpackaged_files_terminate_build 0"
