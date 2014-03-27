@@ -25,8 +25,7 @@ source_type=internal
 fedora_pkg_url=http://pkgs.fedoraproject.org/repo/pkgs
 
 export CCACHE_DIR=$cache_dir/ccache
-export CC='ccache gcc'
-export CXX='ccache g++'
+export PATH=/usr/local/lib/ccache:"$PATH"
 
 echo "-----> Zeroing ccache stats"
 ccache -M $ccache_max_size 2>&1 | indent
