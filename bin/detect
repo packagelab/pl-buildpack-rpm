@@ -12,6 +12,7 @@ case $# in
 esac
 
 build_dir="$1"
+spec_dir=$build_dir/.root
 prefixes='
 fedora
 packaging/rpm
@@ -22,10 +23,12 @@ SPECS
 
 if ls $build_dir/*.spec >/dev/null 2>&1
 then
+  ln -s . $spec_dir
   echo RPM
   exit 0
 elif ls $build_dir/*.spec.in >/dev/null 2>&1
 then
+  ln -s . $spec_dir
   echo RPM
   exit 0
 fi
@@ -34,7 +37,7 @@ for prefix in $prefixes
 do
   if ls $build_dir/$prefix/*.spec >/dev/null 2>&1
   then
-    cp -f $build_dir/$prefix/*.spec $build_dir
+    ln -s $prefix $spec_dir
     echo RPM
     exit 0
   fi

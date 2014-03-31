@@ -35,11 +35,12 @@ echo "-----> Creating RPM build tree"
 mkdir -p $rpmbuild/{BUILD,BUILDROOT,RPMS,SRPMS}
 mkdir -p $cache_dir/rpmbuild/SOURCES
 
+spec_dir=$build_dir/.root
 if [ -d $build_dir/SOURCES ]
 then
   sourcedir=$build_dir/SOURCES
 else
-  sourcedir=$build_dir
+  sourcedir=$build_dir/.root
 fi
 
 echo "-----> Creating .rpmmacros (for rpmspec)"
@@ -63,9 +64,9 @@ EOT
   esac
 fi
 
-if ls $build_dir/*.spec >/dev/null 2>&1
+if ls $spec_dir/*.spec >/dev/null 2>&1
 then
-  specfile=$(ls $build_dir/*.spec)
+  specfile=$(ls $spec_dir/*.spec)
   echo "       Using specfile: $(basename $specfile)"
 else
   echo "       Error: Cannot find specfile"
@@ -75,15 +76,15 @@ fi
 spec_package=$(awk -F: '$1 == "Name" {print $2}' $specfile | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
 spec_version=$(awk -F: '$1 == "Version" {print $2}' $specfile | sed 's/^[[:space:]]*//; s/;[[:space:]]*/;/g')
 
-if ls $build_dir/*.spec.in >/dev/null 2>&1
+if ls $spec_dir/*.spec.in >/dev/null 2>&1
 then
   cd $build_dir >/dev/null 2>&1
-  num_sources=$($rpmspec -qP $build_dir/*.spec | egrep '^Source0:' | awk '{print $2}' | wc -l)
+  num_sources=$($rpmspec -qP $spec_dir/*.spec | egrep '^Source0:' | awk '{print $2}' | wc -l)
   case $num_sources in
     1) :;;
     *) echo "       error: Found $num_sources source URLs, should be 1"; exit 1;;
   esac
-  source_url=$($rpmspec -qP $build_dir/*.spec | egrep '^Source0:' | awk '{print $2}')
+  source_url=$($rpmspec -qP $spec_dir/*.spec | egrep '^Source0:' | awk '{print $2}')
   source_file=$(basename $source_url)
   case $source_file in
     *.tar.bz2|*.tar.gz) :;;
@@ -111,7 +112,7 @@ then
   cd - >/dev/null 2>&1
 else
   echo "-----> Downloading sources and patches"
-  source_list=$($rpmspec -qP $build_dir/*.spec | awk '$1 ~ /^(Source|Patch).*:/ {print $2}')
+  source_list=$($rpmspec -qP $spec_dir/*.spec | awk '$1 ~ /^(Source|Patch).*:/ {print $2}')
   fixed_source_list=
   for url in $source_list
   do

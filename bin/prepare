@@ -18,6 +18,7 @@ esac
 build_dir="$1"
 vendor_rpm_url=http://s3.amazonaws.com/cb-misc/vendor-rpm-4.11.1-2-amd64.tar.gz
 rpmspec=$build_dir/.heroku/vendor/bin/rpmspec
+spec_dir=$build_dir/.root
 
 # Basic build dependencies
 cat <<EOT
@@ -66,12 +67,12 @@ EOT
   esac
 fi
 
-if ls $build_dir/*.spec >/dev/null 2>&1
+if ls $spec_dir/*.spec >/dev/null 2>&1
 then
-  specfile=$(ls $build_dir/*.spec)
-elif ls $build_dir/*.spec.in >/dev/null 2>&1
+  specfile=$(ls $spec_dir/*.spec)
+elif ls $spec_dir/*.spec.in >/dev/null 2>&1
 then
-  specfile_in=$(echo $build_dir/*.spec.in)
+  specfile_in=$(echo $$spec_dir/*.spec.in)
   specfile=$(echo $specfile_in | sed 's/\.in$//')
   parse_configure_ac=$(dirname $0)/parse-configure-ac
   expand_specfile_in=$(dirname $0)/expand-specfile-in
