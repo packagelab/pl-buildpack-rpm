@@ -69,9 +69,6 @@ fi
 if ls $build_dir/*.spec >/dev/null 2>&1
 then
   specfile=$(ls $build_dir/*.spec)
-elif ls $build_dir/SPECS/*.spec >/dev/null 2>&1
-then
-  specfile=$(ls $build_dir/SPECS/*.spec)
 elif ls $build_dir/*.spec.in >/dev/null 2>&1
 then
   specfile_in=$(echo $build_dir/*.spec.in)
