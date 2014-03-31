@@ -72,7 +72,7 @@ then
   specfile=$(ls $spec_dir/*.spec)
 elif ls $spec_dir/*.spec.in >/dev/null 2>&1
 then
-  specfile_in=$(echo $$spec_dir/*.spec.in)
+  specfile_in=$(echo $spec_dir/*.spec.in)
   specfile=$(echo $specfile_in | sed 's/\.in$//')
   parse_configure_ac=$(dirname $0)/parse-configure-ac
   expand_specfile_in=$(dirname $0)/expand-specfile-in
