@@ -16,7 +16,7 @@ case $# in
 esac
 
 build_dir="$1"
-vendor_rpm_url=http://s3.amazonaws.com/cb-misc/vendor-rpm-4.11.1-2-amd64.tar.gz
+vendor_rpm_url=http://s3.amazonaws.com/cb-misc/el5-amd64/vendor-rpm-4.11.2.tar.gz
 rpmspec=$build_dir/.heroku/vendor/bin/rpmspec
 spec_dir=$build_dir/.root
 
