@@ -62,6 +62,8 @@ EOT
       cp $(dirname $0)/../vendor/redhat-rpm-config-9.0.3/usr/lib/rpm/redhat/macros ~/.rpmmacros
       cat <<EOT >>$HOME/.rpmmacros
 %centos_version 600
+%dist .el6
+%rhel 6
 EOT
       ;;
   esac
