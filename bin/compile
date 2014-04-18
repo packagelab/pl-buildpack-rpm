@@ -118,7 +118,19 @@ else
   fixed_source_list=
   for url in $source_list
   do
+    url=$(echo $url | sed 's#^ftp://ftp.kernel.org/pub#https://www.kernel.org/pub#')
     case "$url" in
+      ftp://*)
+        url=$(basename $url)
+        if [ -f $sourcedir/sources -a ! -f $sourcedir/$url ]
+        then
+          md5=$(awk '$2 == "'"$url"'" {print $1}' $sourcedir/sources)
+          fixed_source_list="$fixed_source_list $fedora_pkg_url/$spec_package/$url/$md5/$url"
+          source_type=external
+        else
+          fixed_source_list="$fixed_source_list $url"
+        fi
+        ;;
       *://*)
         fixed_source_list="$fixed_source_list $url"
         source_type=external
@@ -150,9 +162,8 @@ else
           echo "       Copying from cache: $file"
           cp -f $cache_dir/rpmbuild/SOURCES/$file $sourcedir/$file
         else
-          real_url=$(echo $url | sed 's#^ftp://ftp.kernel.org/pub#https://www.kernel.org/pub#')
-          echo "       Downloading: $real_url"
-          curl -fsSL $real_url >$sourcedir/$file 2>&1 | indent
+          echo "       Downloading: $url"
+          curl -fsSL $url >$sourcedir/$file 2>&1 | indent
           cp -f $sourcedir/$file $cache_dir/rpmbuild/SOURCES/$file.new
           mv $cache_dir/rpmbuild/SOURCES/$file.new $cache_dir/rpmbuild/SOURCES/$file
         fi
