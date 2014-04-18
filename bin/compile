@@ -148,8 +148,9 @@ else
           echo "       Copying from cache: $file"
           cp -f $cache_dir/rpmbuild/SOURCES/$file $sourcedir/$file
         else
-          echo "       Downloading: $url"
-          curl -fsSL $url >$sourcedir/$file 2>&1 | indent
+          real_url=$(echo $url | sed 's#^ftp://ftp.kernel.org/pub#https://www.kernel.org/pub#')
+          echo "       Downloading: $real_url"
+          curl -fsSL $real_url >$sourcedir/$file 2>&1 | indent
           cp -f $sourcedir/$file $cache_dir/rpmbuild/SOURCES/$file.new
           mv $cache_dir/rpmbuild/SOURCES/$file.new $cache_dir/rpmbuild/SOURCES/$file
         fi
