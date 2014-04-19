@@ -75,7 +75,7 @@ else
   exit 1
 fi
 
-spec_package=$($rpmspec -qP $specfile | egrep '^Name:' | awk '{print $2}')
+spec_package=$(basename $specfile .spec)
 spec_version=$($rpmspec -qP $specfile | egrep '^Version:' | awk '{print $2}')
 
 if ls $spec_dir/*.spec.in >/dev/null 2>&1
