@@ -23,25 +23,29 @@ spec_dir=$build_dir/.root
 # Basic build dependencies
 cat <<EOT
 packages:
-  - autoconf
-  - automake
-  - bison
-  - byacc
-  - elfutils
-  - flex
+  - bash
+  - bzip2
+  - coreutils
+  - cpio
+  - diffutils
+  - findutils
+  - gawk
   - gcc
   - gcc-c++
-  - gettext
-  - libtool
+  - grep
+  - gzip
+  - info
   - make
   - patch
-  - patchutils
-  - pkgconfig
   - redhat-rpm-config
   - rpm-build
+  - sed
+  - shadow-utils
   - tar
   - unzip
-  - wget
+  - util-linux-ng
+  - which
+  - xz
 EOT
 
 mkdir -p "$build_dir"/.heroku
