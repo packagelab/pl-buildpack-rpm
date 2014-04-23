@@ -282,14 +282,14 @@ then
       timestamp=$(date +%Y%m%d%H%M%S)
       rel=0.$timestamp.dev.g$(echo $commit | sed 's/^\(.\{7\}\).*/\1/')
       echo "       Updating spec file with Release: $rel"
-      sed -i "s/^\(Release:[^0-9]*\).*$/\1$rel%{?dist}/" $spec_file
+      sed -i "s/^\(Release:[^0-9.]*\).*$/\1$rel%{?dist}/" $spec_file
       ;;
     *)
       echo "       Found version: $spec_version (post-release)"
       timestamp=$(date +%Y%m%d%H%M%S)
       rel=1.$timestamp.dev.g$(echo $commit | sed 's/^\(.\{7\}\).*/\1/')
       echo "       Updating spec file with Release: $rel"
-      sed -i "s/^\(Release:[^0-9]*\).*$/\1$rel%{?dist}/" $spec_file
+      sed -i "s/^\(Release:[^0-9.]*\).*$/\1$rel%{?dist}/" $spec_file
       ;;
   esac
   cd - >/dev/null 2>&1
