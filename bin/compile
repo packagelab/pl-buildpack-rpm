@@ -38,9 +38,9 @@ mkdir -p $cache_dir/rpmbuild/SOURCES
 spec_dir=$build_dir/.root
 if [ -d $build_dir/SOURCES ]
 then
-  sourcedir=$build_dir/SOURCES
+  source_dir=$build_dir/SOURCES
 else
-  sourcedir=$build_dir/.root
+  source_dir=$build_dir/.root
 fi
 
 echo "-----> Creating .rpmmacros (for rpmspec)"
@@ -68,188 +68,232 @@ fi
 
 if ls $spec_dir/*.spec >/dev/null 2>&1
 then
-  specfile=$(ls $spec_dir/*.spec)
-  echo "       Using specfile: $(basename $specfile)"
+  spec_file=$(ls $spec_dir/*.spec)
+  echo "       Found RPM spec file: $(basename $spec_file)"
+elif ls $spec_dir/*.spec.in >/dev/null 2>&1
+then
+  spec_file=$(ls $spec_dir/*.spec.in)
+  echo "       Found RPM spec.in file: $(basename $spec_file)"
 else
-  echo "       Error: Cannot find specfile"
+  echo "       error: Cannot find RPM spec file"
   exit 1
 fi
 
-spec_package=$(basename $specfile .spec)
-spec_version=$($rpmspec -qP $specfile | egrep '^Version:' | awk '{print $2}')
-
-if ls $spec_dir/*.spec.in >/dev/null 2>&1
+have_bundled_sources=
+if [ -f $build_dir/configure.ac -o -f $build_dir/configure.in ]
 then
   cd $build_dir >/dev/null 2>&1
-  num_sources=$($rpmspec -qP $spec_dir/*.spec | egrep '^Source0:' | awk '{print $2}' | wc -l)
-  case $num_sources in
-    1) :;;
-    *) echo "       error: Found $num_sources source URLs, should be 1"; exit 1;;
+  source_url=$($rpmspec -P $spec_file | awk '$1 == "Source:" || $1 == "Source0:" {print $2}')
+  case "$source_url" in
+    '')
+      echo "       error: Cannot find 'Source' or 'Source0' field"
+      exit 1
+      ;;
   esac
-  source_url=$($rpmspec -qP $spec_dir/*.spec | egrep '^Source0:' | awk '{print $2}')
   source_file=$(basename $source_url)
-  case $source_file in
-    *.tar.bz2|*.tar.gz) :;;
-    *) echo "       error: Don't know how to create archive $source_file"; exit 1;;
+  case "$source_file" in
+    *.tar.bz2)
+      echo "-----> Creating source archive (using autotools): $source_file"
+      ./autogen.sh 2>&1 | indent
+      ./configure 2>&1 | indent
+      make dist-bzip2 2>&1 | indent
+      ;;
+    *.tar.gz)
+      echo "-----> Creating source archive (using autotools): $source_file"
+      ./autogen.sh 2>&1 | indent
+      ./configure 2>&1 | indent
+      make dist 2>&1 | indent
+      ;;
+    *.tar.xz)
+      echo "-----> Creating source archive (using autotools): $source_file"
+      ./autogen.sh 2>&1 | indent
+      ./configure 2>&1 | indent
+      make dist-xz 2>&1 | indent
+      ;;
+    *)
+      echo "       error: Don't know how to create source archive (using autotools): $source_file"
+      exit 1
+      ;;
   esac
-  echo "-----> Creating source archive"
-  ./autogen.sh 2>&1 | indent
-  ./configure 2>&1 | indent
-  make dist-bzip2 2>&1 | indent
-  make dist 2>&1 | indent
+  have_bundled_sources=1
   cd - >/dev/null 2>&1
 elif [ -f $build_dir/setup.py ]
 then
-  echo "-----> Creating source archive"
   cd $build_dir >/dev/null 2>&1
+  source_url=$($rpmspec -P $spec_file | awk '$1 == "Source:" || $1 == "Source0:" {print $2}')
+  case "$source_url" in
+    '')
+      echo "       error: Cannot find 'Source' or 'Source0' field in spec file: $spec_file"
+      exit 1
+      ;;
+  esac
+  source_file=$(basename $source_url)
   if [ -f /usr/bin/python26 ]
   then
     python=python26
   else
     python=python
   fi
-  $python setup.py sdist --formats=bztar,gztar 2>&1 | indent
-  mv dist/*.tar.bz2 .
-  mv dist/*.tar.gz .
+  case "$source_file" in
+    *.tar.bz2)
+      echo "-----> Creating source archive (using setup.py): $source_file"
+      $python setup.py sdist --formats=bztar 2>&1 | indent
+      mv dist/*.tar.bz2 .
+      ;;
+    *.tar.gz)
+      echo "-----> Creating source archive (using setup.py): $source_file"
+      $python setup.py sdist --formats=gztar 2>&1 | indent
+      mv dist/*.tar.gz .
+      ;;
+    *)
+      echo "       error: Don't know how to create source archive (using setup.py): $source_file"
+      exit 1
+      ;;
+  esac
+  have_bundled_sources=1
   cd - >/dev/null 2>&1
+fi
+
+if ls $spec_dir/*.spec >/dev/null 2>&1
+then
+  spec_file=$(ls $spec_dir/*.spec)
 else
+  echo "       error: Cannot find RPM spec file"
+  exit 1
+fi
+
+spec_package=$(basename $spec_file .spec)
+spec_version=$($rpmspec -P $spec_file | awk '$1 == "Version:" {print $2}')
+
+if [ ! -z "$have_bundled_sources" ]
+then
   echo "-----> Downloading sources and patches"
-  source_list=$($rpmspec -qP $spec_dir/*.spec | awk '$1 ~ /^(Source|Patch).*:/ {print $2}')
-  fixed_source_list=
-  for url in $source_list
+  source_list=
+  for url in $($rpmspec -qP $spec_file | awk '$1 ~ /^(Source|Patch).*:/ {print $2}')
   do
+    # Don't use ftp
     url=$(echo $url | sed 's#^ftp://ftp.kernel.org/pub#https://www.kernel.org/pub#')
+    filename=$(basename $url)
     case "$url" in
-      ftp://*)
-        url=$(basename $url)
-        if [ -f $sourcedir/sources -a ! -f $sourcedir/$url ]
+      http://*|https://*)
+        if [ -f $cache_dir/rpmbuild/SOURCES/$filename ]
         then
-          md5=$(awk '$2 == "'"$url"'" {print $1}' $sourcedir/sources)
-          fixed_source_list="$fixed_source_list $fedora_pkg_url/$spec_package/$url/$md5/$url"
-          source_type=external
+          echo "       Copying downloaded source from cache: $filename"
+          cp -f $cache_dir/rpmbuild/SOURCES/$filename $source_dir/$filename
         else
-          fixed_source_list="$fixed_source_list $url"
+          echo "       Downloading source: $url"
+          curl -fsSL $url >$source_dir/$filename 2>&1 | indent
+          cp -f $source_dir/$filename $cache_dir/rpmbuild/SOURCES/$filename.new
+          mv $cache_dir/rpmbuild/SOURCES/$filename.new $cache_dir/rpmbuild/SOURCES/$filename
         fi
         ;;
-      *://*)
-        fixed_source_list="$fixed_source_list $url"
-        source_type=external
-        ;;
       *)
-        if [ -f $sourcedir/sources -a ! -f $sourcedir/$url ]
+        if [ -f $source_dir/$filename ]
         then
-          md5=$(awk '$2 == "'"$url"'" {print $1}' $sourcedir/sources)
-          fixed_source_list="$fixed_source_list $fedora_pkg_url/$spec_package/$url/$md5/$url"
-          source_type=external
+          echo "       Found source: $filename"
+        elif [ -f $source_dir/sources -a ! -f $source_dir/$filename ]
+        then
+          md5=$(awk '$2 == "'"$filename"'" {print $1}' $source_dir/sources)
+          url="$fedora_pkg_url/$spec_package/$filename/$md5/$filename"
+          if [ -f $cache_dir/rpmbuild/SOURCES/$filename ]
+          then
+            echo "       Copying downloaded source from cache: $filename"
+            cp -f $cache_dir/rpmbuild/SOURCES/$filename $source_dir/$filename
+          else
+            echo "       Downloading source: $url"
+            curl -fsSL $url >$source_dir/$filename 2>&1 | indent
+            cp -f $source_dir/$filename $cache_dir/rpmbuild/SOURCES/$filename.new
+            mv $cache_dir/rpmbuild/SOURCES/$filename.new $cache_dir/rpmbuild/SOURCES/$filename
+          fi
         else
-          fixed_source_list="$fixed_source_list $url"
+          case "$filename" in
+            $spec_package.tar.bz2)
+              echo "-----> Did not find source, creating ad-hoc archive: $filename"
+              tar -C $build_dir -cjf /tmp/$filename .
+              mv /tmp/$filename $source_dir/$filename
+              have_bundled_sources=1
+              ;;
+            $spec_package.tar.gz)
+              echo "-----> Did not find source, creating ad-hoc archive: $filename"
+              tar -C $build_dir -czf /tmp/$filename .
+              mv /tmp/$filename $source_dir/$filename
+              have_bundled_sources=1
+              ;;
+            $spec_package-$spec_version.tar.bz2)
+              echo "-----> Did not find source, creating ad-hoc archive: $filename"
+              mkdir -p /tmp/app/$spec_package-$spec_version
+              tar -C $build_dir -cf - . | tar -C /tmp/app/$spec_package-$spec_version -xf -
+              tar -C /tmp/app -cjf /tmp/$filename .
+              mv /tmp/$filename $source_dir/$filename
+              rm -rf /tmp/app
+              have_bundled_sources=1
+              ;;
+            $spec_package-$spec_version.tar.gz)
+              echo "-----> Did not find source, creating ad-hoc archive: $filename"
+              mkdir -p /tmp/app/$spec_package-$spec_version
+              tar -C $build_dir -cf - . | tar -C /tmp/app/$spec_package-$spec_version -xf -
+              tar -C /tmp/app -czf /tmp/$filename .
+              mv /tmp/$filename $source_dir/$filename
+              rm -rf /tmp/app
+              have_bundled_sources=1
+              ;;
+            *)
+              echo "       error: Cannot find source: $filename"
+              exit 1
+              ;;
+          esac
         fi
         ;;
     esac    
   done
-  cd $build_dir >/dev/null 2>&1
-  for url in $fixed_source_list
-  do
-    file=$(basename $url)
-    if [ -f $sourcedir/$file ]
-    then
-      continue
-    fi
-    case "$url" in
-      *://*)
-        if [ -f $cache_dir/rpmbuild/SOURCES/$file ]
-        then
-          echo "       Copying from cache: $file"
-          cp -f $cache_dir/rpmbuild/SOURCES/$file $sourcedir/$file
-        else
-          echo "       Downloading: $url"
-          curl -fsSL $url >$sourcedir/$file 2>&1 | indent
-          cp -f $sourcedir/$file $cache_dir/rpmbuild/SOURCES/$file.new
-          mv $cache_dir/rpmbuild/SOURCES/$file.new $cache_dir/rpmbuild/SOURCES/$file
-        fi
-        ;;
-      $spec_package.tar.bz2)
-        echo "-----> Creating source archive: $file"
-        tar -C $build_dir -cjf /tmp/$file .
-        mv /tmp/$file $sourcedir/$file
-        ;;
-      $spec_package.tar.gz)
-        echo "-----> Creating source archive: $file"
-        tar -C $build_dir -czf /tmp/$file .
-        mv /tmp/$file $sourcedir/$file
-        ;;
-      $spec_package-$spec_version.tar.bz2)
-        echo "-----> Creating source archive: $file"
-        mkdir -p /tmp/app/$spec_package-$spec_version
-        tar -C $build_dir -cf - . | tar -C /tmp/app/$spec_package-$spec_version -xf -
-        tar -C /tmp/app -cjf /tmp/$file .
-        mv /tmp/$file $sourcedir/$file
-        rm -rf /tmp/app
-        ;;
-      $spec_package-$spec_version.tar.gz)
-        echo "-----> Creating source archive: $file"
-        mkdir -p /tmp/app/$spec_package-$spec_version
-        tar -C $build_dir -cf - . | tar -C /tmp/app/$spec_package-$spec_version -xf -
-        tar -C /tmp/app -czf /tmp/$file .
-        mv /tmp/$file $sourcedir/$file
-        rm -rf /tmp/app
-        ;;
-      *)
-        echo "       Unrecognized source file: $url"
-        ;;
-    esac
-  done
-  if [ -f $sourcedir/sources ]
-  then
-    echo "-----> Verifying MD5 checksums"
-    md5sum -c sources 2>&1 | indent
-  fi
   cd - >/dev/null 2>&1
 fi
 
-case "$source_type" in
-  internal)
-    echo "-----> Inline sources detected, updating version using git metadata"
-    cd $build_dir >/dev/null 2>&1
-    spec_version=$($rpmspec -q --queryformat='%{version}\n' $specfile | sort -u)
-    tag=$(git tag | egrep '^(\w*[^0-9])?'"$spec_version"'(-[0-9]*)?$' || : | head -n 1)
-    case "$tag" in
-      '') tagged_commit=;;
-      *) tagged_commit=$(git rev-list -n 1 "$tag");;
-    esac
-    commit=$(git log -n 1 | awk '$1 == "commit" {print $2}')
-    case "$tagged_commit" in
-      "$commit")
-        echo "       Found version: $spec_version (release)"
-        if grep -q '^Release:.*%{?dist}$' $specfile
-        then
-          echo "       Not modifying spec file"
-        else
-          echo "       Adding %{?dist} tag to spec file"
-          sed -i "s/^\(Release:.*\)$/\1%{?dist}/" $specfile
-        fi
-        ;;
-      '')
-        echo "       Found version: $spec_version (pre-release)"
-        timestamp=$(date +%Y%m%d%H%M%S)
-        rel=0.$timestamp.dev.g$(echo $commit | sed 's/^\(.\{7\}\).*/\1/')
-        echo "       Updating spec file with Release: $rel"
-        sed -i "s/^\(Release:[^0-9]*\).*$/\1$rel%{?dist}/" $specfile
-        ;;
-      *)
-        echo "       Found version: $spec_version (post-release)"
-        timestamp=$(date +%Y%m%d%H%M%S)
-        rel=1.$timestamp.dev.g$(echo $commit | sed 's/^\(.\{7\}\).*/\1/')
-        echo "       Updating spec file with Release: $rel"
-        sed -i "s/^\(Release:[^0-9]*\).*$/\1$rel%{?dist}/" $specfile
-        ;;
-    esac
-    cd - >/dev/null 2>&1
-    ;;
-  *)
-    echo "-----> External sources detected, leaving spec file version unchanged"
-    ;;
-esac
+if [ -f $source_dir/sources ]
+then
+  echo "-----> Verifying MD5 checksums for sources"
+  md5sum -c sources 2>&1 | indent
+fi
+
+if [ -n "$have_bundled_sources" ]
+then
+  echo "-----> Inline sources detected, updating version using git metadata"
+  cd $build_dir >/dev/null 2>&1
+  spec_version=$($rpmspec -q --queryformat='%{version}\n' $spec_file | sort -u)
+  tag=$(git tag | egrep '^(\w*[^0-9])?'"$spec_version"'(-[0-9]*)?$' || : | head -n 1)
+  case "$tag" in
+    '') tagged_commit=;;
+    *) tagged_commit=$(git rev-list -n 1 "$tag");;
+  esac
+  commit=$(git log -n 1 | awk '$1 == "commit" {print $2}')
+  case "$tagged_commit" in
+    "$commit")
+      echo "       Found version: $spec_version (release)"
+      if grep -q '^Release:.*%{?dist}$' $spec_file
+      then
+        echo "       Not modifying spec file"
+      else
+        echo "       Adding %{?dist} tag to spec file"
+        sed -i "s/^\(Release:.*\)$/\1%{?dist}/" $spec_file
+      fi
+      ;;
+    '')
+      echo "       Found version: $spec_version (pre-release)"
+      timestamp=$(date +%Y%m%d%H%M%S)
+      rel=0.$timestamp.dev.g$(echo $commit | sed 's/^\(.\{7\}\).*/\1/')
+      echo "       Updating spec file with Release: $rel"
+      sed -i "s/^\(Release:[^0-9]*\).*$/\1$rel%{?dist}/" $spec_file
+      ;;
+    *)
+      echo "       Found version: $spec_version (post-release)"
+      timestamp=$(date +%Y%m%d%H%M%S)
+      rel=1.$timestamp.dev.g$(echo $commit | sed 's/^\(.\{7\}\).*/\1/')
+      echo "       Updating spec file with Release: $rel"
+      sed -i "s/^\(Release:[^0-9]*\).*$/\1$rel%{?dist}/" $spec_file
+      ;;
+  esac
+  cd - >/dev/null 2>&1
+fi
 
 echo "-----> Creating .rpmmacros (for rpmbuild)"
 if [ -f /etc/redhat-release ]
@@ -271,13 +315,10 @@ EOT
 fi
 cat <<EOT >>$HOME/.rpmmacros
 %_topdir $rpmbuild
-%_sourcedir $sourcedir
+%_sourcedir $source_dir
 EOT
 
-# XXX: Make _unpackaged_files_terminate_build configurable?
-# --define "_unpackaged_files_terminate_build 0"
 echo "-----> Building RPM package"
 cd $build_dir >/dev/null 2>&1
-rpmbuild -bb --define "_topdir $rpmbuild" --define "_sourcedir $sourcedir" \
-  $specfile 2>&1 | indent
+rpmbuild -bb $spec_file 2>&1 | indent
 cd - >/dev/null 2>&1
