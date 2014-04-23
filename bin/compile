@@ -165,7 +165,7 @@ fi
 spec_package=$(basename $spec_file .spec)
 spec_version=$($rpmspec -P $spec_file | awk '$1 == "Version:" {print $2}')
 
-if [ ! -z "$have_bundled_sources" ]
+if [ -z "$have_bundled_sources" ]
 then
   echo "-----> Downloading sources and patches"
   source_list=
