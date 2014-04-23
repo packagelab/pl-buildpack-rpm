@@ -48,6 +48,12 @@ packages:
   - xz
 EOT
 
+if [ -f "$build_dir"/configure.ac -o -f "$build_dir"/configure.in ]
+then
+  echo '  - autoconf'
+  echo '  - automake'
+fi
+
 mkdir -p "$build_dir"/.heroku
 curl -fsSL $vendor_rpm_url | tar -C "$build_dir"/.heroku -xzf -
 
