@@ -70,10 +70,10 @@ if ls $spec_dir/*.spec >/dev/null 2>&1
 then
   spec_file=$(ls $spec_dir/*.spec)
   echo "       Found RPM spec file: $(basename $spec_file)"
-elif ls $spec_dir/*.spec.in >/dev/null 2>&1
+elif ls $spec_dir/*.spec.tmp >/dev/null 2>&1
 then
-  spec_file=$(ls $spec_dir/*.spec.in)
-  echo "       Found RPM spec.in file: $(basename $spec_file)"
+  spec_file=$(ls $spec_dir/*.spec.tmp)
+  echo "       Found temporary RPM spec file: $(basename $spec_file)"
 else
   echo "       error: Cannot find RPM spec file"
   exit 1
