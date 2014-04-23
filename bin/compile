@@ -246,13 +246,14 @@ then
         ;;
     esac    
   done
-  cd - >/dev/null 2>&1
 fi
 
 if [ -f $source_dir/sources ]
 then
   echo "-----> Verifying MD5 checksums for sources"
+  cd "$source_dir" >/dev/null 2>&1
   md5sum -c sources 2>&1 | indent
+  cd - >/dev/null 2>&1
 fi
 
 if [ -n "$have_bundled_sources" ]
