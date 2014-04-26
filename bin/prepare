@@ -52,6 +52,7 @@ then
   rel=$(head -n1 /etc/redhat-release)
   case "$rel" in
     'Fedora release 19'*|'Fedora release 20'*)
+      echo '  - glibc-static'
       echo '  - util-linux'
       ;;
     'CentOS release 5'*|'CentOS release 6'*)
