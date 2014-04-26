@@ -90,6 +90,13 @@ EOT
 %rhel 6
 EOT
       ;;
+    20)
+      cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
+      cat <<EOT >>$HOME/.rpmmacros
+%dist .fc20
+%fedora 20
+EOT
+      ;;
   esac
 fi
 
