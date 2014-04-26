@@ -52,6 +52,7 @@ then
       cat <<EOT >>$HOME/.rpmmacros
 %centos_version 505
 %dist .el5
+%el5 1
 %rhel 5
 EOT
       ;;
@@ -60,6 +61,7 @@ EOT
       cat <<EOT >>$HOME/.rpmmacros
 %centos_version 600
 %dist .el6
+%el6 1
 %rhel 6
 EOT
       ;;
