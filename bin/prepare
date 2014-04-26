@@ -51,10 +51,10 @@ if [ -f /etc/redhat-release ]
 then
   rel=$(head -n1 /etc/redhat-release)
   case "$rel" in
-    'Fedora release 19'*|'Fedora release 20'*)
+    'CentOS release 5'*|'Fedora release 19'*|'Fedora release 20'*)
       echo '  - util-linux'
       ;;
-    'CentOS release 5'*|'CentOS release 6'*)
+    'CentOS release 6'*)
       echo '  - util-linux-ng'
       ;;
   esac
