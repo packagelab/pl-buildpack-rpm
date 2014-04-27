@@ -94,6 +94,7 @@ EOT
       cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
       cat <<EOT >>$HOME/.rpmmacros
 %dist .fc19
+%fc19 1
 %fedora 19
 EOT
       ;;
@@ -101,6 +102,7 @@ EOT
       cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
       cat <<EOT >>$HOME/.rpmmacros
 %dist .fc20
+%fc20 1
 %fedora 20
 EOT
       ;;
