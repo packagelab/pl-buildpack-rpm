@@ -298,15 +298,17 @@ then
       ;;
     '')
       echo "       Found version: $spec_version (pre-release)"
+      # Example: 3.0.1-0.20140507075019.git.cf89c98
       timestamp=$(date +%Y%m%d%H%M%S)
-      rel=0.$timestamp.dev.g$(echo $commit | sed 's/^\(.\{7\}\).*/\1/')
+      rel=0.$timestamp.git.$(echo $commit | sed 's/^\(.\{7\}\).*/\1/')
       echo "       Updating spec file with Release: $rel"
       sed -i "s/^Release:.*$/Release: $rel%{?dist}/" $spec_file
       ;;
     *)
       echo "       Found version: $spec_version (post-release)"
+      # Example: 3.0.1-1.20140507075019.git.cf89c98
       timestamp=$(date +%Y%m%d%H%M%S)
-      rel=1.$timestamp.dev.g$(echo $commit | sed 's/^\(.\{7\}\).*/\1/')
+      rel=1.$timestamp.git.$(echo $commit | sed 's/^\(.\{7\}\).*/\1/')
       echo "       Updating spec file with Release: $rel"
       sed -i "s/^Release:.*$/Release: $rel%{?dist}/" $spec_file
       ;;
