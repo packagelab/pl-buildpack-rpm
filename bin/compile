@@ -170,6 +170,29 @@ then
   esac
   have_bundled_sources=1
   cd - >/dev/null 2>&1
+elif [ -f $build_dir/ext/Makefile.tarball ]
+then
+  cd $build_dir >/dev/null 2>&1
+  source_url=$($rpmspec -P $spec_file | awk '$1 == "Source:" || $1 == "Source0:" {print $2}')
+  case "$source_url" in
+    '')
+      echo "       error: Cannot find 'Source' or 'Source0' field"
+      exit 1
+      ;;
+  esac
+  source_file=$(basename $source_url)
+  case "$source_file" in
+    *.tar.bz2|*.tar.gz)
+      echo "-----> Creating source archive (using 'make tarball'): $source_file"
+      make tarball
+      ;;
+    *)
+      echo "       error: Don't know how to create source archive (using 'make tarball'): $source_file"
+      exit 1
+      ;;
+  esac
+  have_bundled_sources=1
+  cd - >/dev/null 2>&1   
 fi
 
 if ls $spec_dir/*.spec >/dev/null 2>&1

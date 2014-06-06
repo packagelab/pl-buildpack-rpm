@@ -14,6 +14,7 @@ esac
 build_dir="$1"
 spec_dir=$build_dir/.root
 prefixes='
+ext/redhat
 fedora
 packaging/rpm
 rpm
