@@ -121,11 +121,11 @@ fi
 
 $rpmspec -q --buildrequires $specfile > /tmp/packages
 error=0
-for dep in $(cat /tmp/packages)
+while read -r dep
 do
   pkg=$(yum -q resolvedep "$dep" | awk '$1 ~ /^[0-9]/ {print $1}')
   case "$pkg" in
-    'No Package Found'*)
+    ''|'No Package Found'*)
       echo $pkg >&2
       error=1
       ;;
@@ -133,5 +133,5 @@ do
       echo "  - \"$pkg\""
       ;;
   esac
-done
+done < /tmp/packages
 exit $error
