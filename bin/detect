@@ -21,16 +21,17 @@ rpm
 spec
 SPECS
 '
+app_type='RPM package'
 
 if ls $build_dir/*.spec >/dev/null 2>&1
 then
   ln -s . $spec_dir
-  echo RPM
+  echo $app_type
   exit 0
 elif ls $build_dir/*.spec.in >/dev/null 2>&1
 then
   ln -s . $spec_dir
-  echo RPM
+  echo $app_type
   exit 0
 fi
 
@@ -39,7 +40,7 @@ do
   if ls $build_dir/$prefix/*.spec >/dev/null 2>&1
   then
     ln -s $prefix $spec_dir
-    echo RPM
+    echo $app_type
     exit 0
   fi
 done
