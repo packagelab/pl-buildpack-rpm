@@ -27,7 +27,7 @@ repo_fmt=
 
 if [ -f /etc/os-release ]
 then
-  os_name=$(awk -F= '$1 == "ID" {print $2}' /etc/os-release)
+  os_name=$(awk -F= '$1 == "ID" {print $2}' /etc/os-release | sed 's/"//g')
   os_version=$(awk -F= '$1 == "VERSION_ID" {print $2}' /etc/os-release | sed 's/"//g')
 elif [ -f /etc/redhat-release ]
 then
