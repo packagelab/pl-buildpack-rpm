@@ -90,6 +90,15 @@ EOT
 %rhel 6
 EOT
       ;;
+    7.*)
+      cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
+      cat <<EOT >>$HOME/.rpmmacros
+%centos_ver 7
+%dist .el7
+%el7 1
+%rhel 7
+EOT
+      ;;
     19)
       cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
       cat <<EOT >>$HOME/.rpmmacros
@@ -104,6 +113,14 @@ EOT
 %dist .fc20
 %fc20 1
 %fedora 20
+EOT
+      ;;
+    21)
+      cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
+      cat <<EOT >>$HOME/.rpmmacros
+%dist .fc21
+%fc21 1
+%fedora 21
 EOT
       ;;
   esac
