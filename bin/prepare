@@ -20,6 +20,28 @@ vendor_rpm_url=http://s3.amazonaws.com/cb-misc/el5-amd64/vendor-rpm-4.11.2.tar.g
 rpmspec=$build_dir/.heroku/vendor/bin/rpmspec
 spec_dir=$build_dir/.root
 
+os_name=
+os_version=
+code_name=
+repo_fmt=
+
+if [ -f /etc/os-release ]
+then
+  os_name=$(awk -F= '$1 == "ID" {print $2}' /etc/os-release)
+  os_version=$(awk -F= '$1 == "VERSION_ID" {print $2}' /etc/os-release | sed 's/"//g')
+elif [ -f /etc/redhat-release ]
+then
+  os_name=$(sed -n 1p /etc/redhat-release | sed -e 's/\s*release.*$//' | awk '{print tolower($0)}')
+  os_version=$(sed -n 1p /etc/redhat-release | sed -e 's/.*release\s*//' -e 's/(.*)$//')
+elif [ -f /etc/lsb-release ]
+then
+  os_name=$(awk -F= '$1 == "DISTRIB_ID" {print $2}' /etc/lsb-release | awk '{print tolower($0)}')
+  os_version=$(awk -F= '$1 == "DISTRIB_RELEASE" {print $2}' /etc/lsb-release)
+else
+  echo "error: cannot find /etc/os-release, /etc/redhat-release, or /etc/lsb-release" >&2
+  exit 1
+fi
+
 # Basic build dependencies
 cat <<EOT
 packages:
@@ -47,84 +69,82 @@ packages:
   - xz
 EOT
 
-if [ -f /etc/redhat-release ]
-then
-  rel=$(head -n1 /etc/redhat-release)
-  case "$rel" in
-    'CentOS release 5'*|'Fedora release 19'*|'Fedora release 20'*)
-      echo '  - util-linux'
-      ;;
-    'CentOS release 6'*)
-      echo '  - util-linux-ng'
-      ;;
-  esac
-fi
-
 if [ -f "$build_dir"/configure.ac -o -f "$build_dir"/configure.in ]
 then
   echo '  - autoconf'
   echo '  - automake'
 fi
 
-mkdir -p "$build_dir"/.heroku
-curl -fsSL $vendor_rpm_url | tar -C "$build_dir"/.heroku -xzf -
+case "$os_name:$os_version" in
+  centos:5.*|centos:7.*|fedora:*)
+    echo '  - util-linux'
+    ;;
+  centos:6.*)
+    echo '  - util-linux-ng'
+    ;;
+  *)
+    echo "error: unsupported Linux distribution: $os_name:$os_version" >&2
+    exit 1
+    ;;
+esac
 
-if [ -f /etc/redhat-release ]
-then
-  case $(awk '{print $3}' < /etc/redhat-release) in
-    5.*)
-      cp $(dirname $0)/../vendor/redhat-rpm-config-8.0.45/usr/lib/rpm/redhat/macros ~/.rpmmacros
-      cat <<EOT >>$HOME/.rpmmacros
+case "$os_name:$os_version" in
+  centos:5.*)
+    cp $(dirname $0)/../vendor/redhat-rpm-config-8.0.45/usr/lib/rpm/redhat/macros ~/.rpmmacros
+    cat <<EOT >>$HOME/.rpmmacros
 %centos_version 505
 %dist .el5
 %el5 1
 %rhel 5
 EOT
-      ;;
-    6.*)
-      cp $(dirname $0)/../vendor/redhat-rpm-config-9.0.3/usr/lib/rpm/redhat/macros ~/.rpmmacros
-      cat <<EOT >>$HOME/.rpmmacros
+    ;;
+  centos:6.*)
+    cp $(dirname $0)/../vendor/redhat-rpm-config-9.0.3/usr/lib/rpm/redhat/macros ~/.rpmmacros
+    cat <<EOT >>$HOME/.rpmmacros
 %centos_version 600
 %dist .el6
 %el6 1
 %rhel 6
 EOT
-      ;;
-    7.*)
-      cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
-      cat <<EOT >>$HOME/.rpmmacros
+    ;;
+  centos:7.*)
+    cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
+    cat <<EOT >>$HOME/.rpmmacros
 %centos_ver 7
 %dist .el7
 %el7 1
 %rhel 7
 EOT
-      ;;
-    19)
-      cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
-      cat <<EOT >>$HOME/.rpmmacros
+    ;;
+  fedora:19)
+    cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
+    cat <<EOT >>$HOME/.rpmmacros
 %dist .fc19
 %fc19 1
 %fedora 19
 EOT
-      ;;
-    20)
-      cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
-      cat <<EOT >>$HOME/.rpmmacros
+    ;;
+  fedora:20)
+    cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
+    cat <<EOT >>$HOME/.rpmmacros
 %dist .fc20
 %fc20 1
 %fedora 20
 EOT
-      ;;
-    21)
-      cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
-      cat <<EOT >>$HOME/.rpmmacros
+    ;;
+  fedora:21)
+    cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
+    cat <<EOT >>$HOME/.rpmmacros
 %dist .fc21
 %fc21 1
 %fedora 21
 EOT
-      ;;
-  esac
-fi
+    ;;
+  *)
+    echo "error: unsupported Linux distribution: $os_name:$os_version" >&2
+    exit 1
+    ;;
+esac
 
 if ls $spec_dir/*.spec >/dev/null 2>&1
 then
@@ -135,6 +155,9 @@ then
   specfile=$(echo $specfile_in | sed 's/\.in$/.tmp/')
   sed 's/@[A-Z_]*@/placeholder/' < $specfile_in > $specfile
 fi
+
+mkdir -p "$build_dir"/.heroku
+curl -fsSL $vendor_rpm_url | tar -C "$build_dir"/.heroku -xzf -
 
 $rpmspec -q --buildrequires $specfile > /tmp/packages
 error=0
