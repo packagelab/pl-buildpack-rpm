@@ -76,10 +76,10 @@ then
 fi
 
 case "$os_name:$os_version" in
-  centos:5.*|centos:7.*|fedora:*)
+  centos:5*|centos:7*|fedora:*)
     echo '  - util-linux'
     ;;
-  centos:6.*)
+  centos:6*)
     echo '  - util-linux-ng'
     ;;
   *)
@@ -89,7 +89,7 @@ case "$os_name:$os_version" in
 esac
 
 case "$os_name:$os_version" in
-  centos:5.*)
+  centos:5*)
     cp $(dirname $0)/../vendor/redhat-rpm-config-8.0.45/usr/lib/rpm/redhat/macros ~/.rpmmacros
     cat <<EOT >>$HOME/.rpmmacros
 %centos_version 505
@@ -98,7 +98,7 @@ case "$os_name:$os_version" in
 %rhel 5
 EOT
     ;;
-  centos:6.*)
+  centos:6*)
     cp $(dirname $0)/../vendor/redhat-rpm-config-9.0.3/usr/lib/rpm/redhat/macros ~/.rpmmacros
     cat <<EOT >>$HOME/.rpmmacros
 %centos_version 600
@@ -107,7 +107,7 @@ EOT
 %rhel 6
 EOT
     ;;
-  centos:7.*)
+  centos:7*)
     cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
     cat <<EOT >>$HOME/.rpmmacros
 %centos_ver 7
