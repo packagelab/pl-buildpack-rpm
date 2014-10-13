@@ -48,8 +48,8 @@ if [ -f /etc/redhat-release ]
 then
   case $(awk '{print $3}' < /etc/redhat-release) in
     5.*)
-      cp $(dirname $0)/../vendor/redhat-rpm-config-8.0.45/usr/lib/rpm/redhat/macros ~/.rpmmacros
-      cat <<EOT >>$HOME/.rpmmacros
+      #cp $(dirname $0)/../vendor/redhat-rpm-config-8.0.45/usr/lib/rpm/redhat/macros ~/.rpmmacros
+      cat <<EOT >$HOME/.rpmmacros
 %centos_version 505
 %dist .el5
 %el5 1
@@ -57,8 +57,8 @@ then
 EOT
       ;;
     6.*)
-      cp $(dirname $0)/../vendor/redhat-rpm-config-9.0.3/usr/lib/rpm/redhat/macros ~/.rpmmacros
-      cat <<EOT >>$HOME/.rpmmacros
+      #cp $(dirname $0)/../vendor/redhat-rpm-config-9.0.3/usr/lib/rpm/redhat/macros ~/.rpmmacros
+      cat <<EOT >$HOME/.rpmmacros
 %centos_version 600
 %dist .el6
 %el6 1
@@ -66,8 +66,8 @@ EOT
 EOT
       ;;
     7.*)
-      cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
-      cat <<EOT >>$HOME/.rpmmacros
+      #cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
+      cat <<EOT >$HOME/.rpmmacros
 %centos_ver 7
 %dist .el7
 %el7 1
@@ -75,24 +75,24 @@ EOT
 EOT
       ;;
     19)
-      cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
-      cat <<EOT >>$HOME/.rpmmacros
+      #cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
+      cat <<EOT >$HOME/.rpmmacros
 %dist .fc19
 %fc19 1
 %fedora 19
 EOT
       ;;
     20)
-      cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
-      cat <<EOT >>$HOME/.rpmmacros
+      #cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
+      cat <<EOT >$HOME/.rpmmacros
 %dist .fc20
 %fc20 1
 %fedora 20
 EOT
       ;;
     21)
-      cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
-      cat <<EOT >>$HOME/.rpmmacros
+      #cp $(dirname $0)/../vendor/redhat-rpm-config-9.1.0/usr/lib/rpm/redhat/macros ~/.rpmmacros
+      cat <<EOT >$HOME/.rpmmacros
 %dist .fc21
 %fc21 1
 %fedora 21
@@ -356,24 +356,24 @@ then
   cd - >/dev/null 2>&1
 fi
 
-echo "-----> Creating .rpmmacros (for rpmbuild)"
-if [ -f /etc/redhat-release ]
-then
-  case $(awk '{print $3}' < /etc/redhat-release) in
-    5.*)
-      cat <<EOT >$HOME/.rpmmacros
-%centos_version 505
-%dist .el5
-%rhel 5
-EOT
-      ;;
-    6.*)
-      cat <<EOT >$HOME/.rpmmacros
-%centos_version 600
-EOT
-      ;;
-  esac
-fi
+#echo "-----> Creating .rpmmacros (for rpmbuild)"
+#if [ -f /etc/redhat-release ]
+#then
+#  case $(awk '{print $3}' < /etc/redhat-release) in
+#    5.*)
+#      cat <<EOT >$HOME/.rpmmacros
+#%centos_version 505
+#%dist .el5
+#%rhel 5
+#EOT
+#      ;;
+#    6.*)
+#      cat <<EOT >$HOME/.rpmmacros
+#%centos_version 600
+#EOT
+#      ;;
+#  esac
+#fi
 cat <<EOT >>$HOME/.rpmmacros
 %_topdir $rpmbuild
 %_sourcedir $source_dir
