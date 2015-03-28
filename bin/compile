@@ -173,12 +173,12 @@ then
     *.tar.bz2)
       echo "-----> Creating source archive (using setup.py): $source_file"
       $python setup.py sdist --formats=bztar 2>&1 | indent
-      mv dist/*.tar.bz2 .
+      mv dist/*.tar.bz2 $source_dir
       ;;
     *.tar.gz)
       echo "-----> Creating source archive (using setup.py): $source_file"
       $python setup.py sdist --formats=gztar 2>&1 | indent
-      mv dist/*.tar.gz .
+      mv dist/*.tar.gz $source_dir
       ;;
     *)
       echo "       error: Don't know how to create source archive (using setup.py): $source_file"
